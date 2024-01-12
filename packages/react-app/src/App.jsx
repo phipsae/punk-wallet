@@ -242,6 +242,8 @@ function App(props) {
   const userProvider = useUserProvider(injectedProvider, localProvider);
   const address = useUserAddress(userProvider);
 
+
+// Hello!
   // You can warn the user if you would like them to be on a specific network
   // I think the naming is misleading a little bit
   // localChainId is what we can select with the chainId selector on the UI
