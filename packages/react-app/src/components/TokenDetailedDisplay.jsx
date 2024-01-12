@@ -15,7 +15,8 @@ export default function TokenDetailedDisplay({ tokenSettingsHelper, token, token
             <div style={{display: 'flex', alignItems: "center", justifyContent:"center", paddingTop: setItemDetailed ? "1em": "0.5em"}}>
                 {token.hasOwnProperty("address") ?
                     <div
-                        // Todo: Create a link blue variable somewhere
+                    // just a test comment    
+                    // Todo: Create a link blue variable somewhere
                         style={{cursor: "pointer", color: "rgb(24, 144, 255)", fontSize:"15px"}}
                         onClick={() => window.open(tokenLink, '_blank')}>
 
