@@ -12,6 +12,14 @@ export default function TokenDetailedDisplay({
 }) {
   const tokenLink = network.blockExplorer + "token/" + token.address;
 
+  const copyToClipboard = async text => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Error in copying text: ", err);
+    }
+  };
+
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -27,15 +35,27 @@ export default function TokenDetailedDisplay({
         }}
       >
         {token.hasOwnProperty("address") ? (
-          <div
-            style={{ cursor: "pointer", color: `var(--link-color)`, fontSize: "15px" }}
-            onClick={() => window.open(tokenLink, "_blank")}
-          >
-            {token.address}
+          <>
+            <div
+              style={{ cursor: "pointer", color: `var(--link-color)`, fontSize: "15px", marginRight: "10px" }}
+              onClick={() => window.open(tokenLink, "_blank")}
+            >
+              {token.address}
 
-            {/* ToDo: A copy button might be better here */}
-            <img src="/open_in_new.svg" alt="open_in_new.svg" style={{ paddingBottom: "0.2em" }} />
-          </div>
+              {/* ToDo: A copy button might be better here - added but still has the link capability */}
+              <img src="/open_in_new.svg" alt="open_in_new.svg" style={{ paddingBottom: "0.2em" }} />
+            </div>
+            <div
+              style={{ cursor: "pointer", color: `var(--link-color)`, fontSize: "15px" }}
+              onClick={() => copyToClipboard(token.address)}
+            >
+              <img
+                src="/paste-svgrepo-com.svg"
+                alt="Copy"
+                style={{ paddingBottom: "0.2em", width: "25px", height: "25px", transform: "scale(1.1)" }}
+              />
+            </div>
+          </>
         ) : (
           <div>Native Token</div>
         )}
