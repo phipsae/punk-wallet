@@ -5,11 +5,11 @@ const { ethers } = require("ethers");
 const RELAYER_PK = process.env.REACT_APP_RELAYER_PK;
 
 export const sendTransactionViaRelayerAccount = async (txParams, origin, provider) => {
-	const relayerWallet = new ethers.Wallet(RELAYER_PK, provider);
+  const relayerWallet = new ethers.Wallet(RELAYER_PK, provider);
 
-	const result = await sendTransaction(txParams, relayerWallet);
+  const result = await sendTransaction(txParams, relayerWallet);
 
-	result.origin = origin;
+  result.origin = origin;
 
-	return result;
-}
+  return result;
+};
