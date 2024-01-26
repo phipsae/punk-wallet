@@ -6,8 +6,6 @@ import { getTokenPrice } from "../helpers/LiFiTokenPriceHelper";
 import { TokenSwitch } from "./TokenSwitch";
 
 // ToDo: Prefix could be updated with token symbol instead of ticker
-// ToDo: Link Balance on top with toggle in Input, so that when it is clicked both values are changed
-// ToDo: add max Button
 // ToDo: add check if enough balance is available, otherwise don't allow user to send
 // ToDo: address check if valid
 
