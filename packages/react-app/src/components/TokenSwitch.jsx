@@ -30,11 +30,6 @@ export const TokenSwitch = ({
 
   return (
     <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: token.name === "" ? "center" : "space-evenly",
-      }}
       onClick={() => {
         if (price !== 0) {
           toggleUSDERC20();
