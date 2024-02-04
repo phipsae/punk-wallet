@@ -4,7 +4,6 @@ import TokenDisplay from "./TokenDisplay";
 // toggle functionality for switching between ERC20 token and USD
 export const TokenSwitch = ({
   token,
-  divStyle,
   price,
   setDisplay,
   display,
@@ -50,7 +49,6 @@ export const TokenSwitch = ({
         display: "flex",
         alignItems: "center",
         justifyContent: token.name === "" ? "center" : "space-evenly",
-        ...divStyle,
       }}
       onClick={() => {
         if (price !== 0) {
