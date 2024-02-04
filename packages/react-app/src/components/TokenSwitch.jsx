@@ -28,20 +28,6 @@ export const TokenSwitch = ({
     }
   };
 
-  const switching = () => {
-    return dollarMode ? (
-      <>💵 USD 🔀</>
-    ) : (
-      <>
-        <TokenDisplay
-          token={token}
-          spanStyle={{ paddingLeft: "0.2em" }}
-          optionalEnding="🔀"
-        />
-      </>
-    );
-  };
-
   return (
     <div
       style={{
@@ -57,7 +43,21 @@ export const TokenSwitch = ({
         }
       }}
     >
-      {switching()}
+      <Switch dollarMode={dollarMode} token={token}/>
     </div>
   );
+};
+
+const Switch = ({ dollarMode, token }) => {
+  return dollarMode ? (
+      <>💵 USD 🔀</>
+    ) : (
+      <>
+        <TokenDisplay
+          token={token}
+          spanStyle={{ paddingLeft: "0.2em" }}
+          optionalEnding="🔀"
+        />
+      </>
+    );
 };
