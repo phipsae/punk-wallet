@@ -35,7 +35,6 @@ export const TokenSwitch = ({
       <>
         <TokenDisplay
           token={token}
-          divStyle={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           spanStyle={{ paddingLeft: "0.2em" }}
           optionalEnding="🔀"
         />
