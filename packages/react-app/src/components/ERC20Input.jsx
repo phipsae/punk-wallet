@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 import { Input } from "antd";
 
-import { TokenSwitch } from "./TokenSwitch";
+import AmountDollarSwitch from "./AmountDollarSwitch";
 import TokenDisplay from "./TokenDisplay";
 
 // ToDo: add check if enough balance is available, otherwise don't allow user to send
@@ -56,15 +56,10 @@ export default function ERC20Input({ token, balance, dollarMode, setDollarMode, 
         placeholder={"amount in " + (dollarMode ? "USD" : token.name)}
         prefix={<Prefix dollarMode={dollarMode} token={token} />}
         addonAfter={
-          <TokenSwitch
+          <AmountDollarSwitch
             token={token}
-            price={price}
-            setDisplay={setDisplay}
-            display={display}
             dollarMode={dollarMode}
             setDollarMode={setDollarMode}
-            value={value}
-            setValue={setValue}
           />
         }
         onChange={async e => {
