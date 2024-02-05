@@ -13,6 +13,10 @@ export default function ERC20Input({ token, balance, dollarMode, setDollarMode, 
 
   const [value, setValue] = useState();
 
+  useEffect(() => {
+    setDisplay(value);
+  }, [value]);
+
   const amountCalculation = _value => {
     if (dollarMode) {
       const numericValue = parseFloat(_value);
@@ -52,7 +56,6 @@ export default function ERC20Input({ token, balance, dollarMode, setDollarMode, 
         onChange={async e => {
           amountCalculation(e.target.value);
           setValue(e.target.value);
-          setDisplay(e.target.value);
         }}
       />
     </div>
