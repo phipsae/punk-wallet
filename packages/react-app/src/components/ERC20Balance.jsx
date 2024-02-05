@@ -24,7 +24,12 @@ export default function ERC20Balance({
   const [displayedNumber, setDisplayedNumber] = useState();
 
   useEffect(() => {
-    if (!balance || !price) {
+    // Price 0 means that there was an error when fetching token price
+    if (price === 0) {
+      setDollarMode(false);
+    }
+
+    if (!balance || (!price && (price !== 0))) {
       return;
     }
 
@@ -38,9 +43,8 @@ export default function ERC20Balance({
 
       if (balanceNumber < 1) {
         decimals = 4;
-      }      
-    }
-    else {
+      }
+    } else {
       displayNumber = balanceNumber * price;
     }
 
@@ -82,9 +86,11 @@ export default function ERC20Balance({
   return (
     <div>
       <span
-        style={{ verticalAlign: "middle", fontSize: size ? size : 24, padding: 8, cursor: "pointer" }}
+        style={{ verticalAlign: "middle", fontSize: size ? size : 24, padding: 8, cursor: price ? "pointer" : "" }}
         onClick={() => {
-          setDollarMode(!dollarMode);
+          if (price) {
+            setDollarMode(!dollarMode);
+          }
         }}
       >
         {!displayedNumber ? <Spin /> : <Display displayedNumber={displayedNumber} dollarMode={dollarMode} />}
@@ -96,8 +102,7 @@ export default function ERC20Balance({
 const Display = ({ displayedNumber, dollarMode }) => {
   if (dollarMode) {
     return "$" + displayedNumber;
-  }
-  else {
+  } else {
     return displayedNumber;
   }
 };

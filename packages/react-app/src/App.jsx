@@ -912,9 +912,8 @@ function App(props) {
 
   // ERC20 Token balance to use in balance and in tokenswitch
   const [balanceERC20, setBalanceERC20] = useState(null);
-  console.log("balanceERC20", balanceERC20);
 
-  const [priceERC20, setPriceERC20] = useState(0);
+  const [priceERC20, setPriceERC20] = useState();
 
   const walletDisplay =
     web3Modal && web3Modal.cachedProvider ? (
