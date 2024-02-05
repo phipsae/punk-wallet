@@ -60,17 +60,13 @@ export class ERC20Helper {
 
     return decimalCorrectedAmountBigNumber;
   };
+}
 
-  getInverseDecimalCorrectedAmountNumber = async (amount, decimals) => {
-    if (!decimals) {
-      decimals = await this.decimals();
-    }
-
-    const decimalCorrectedAmountString = utils.formatUnits(amount.toString(), decimals);
+export const getInverseDecimalCorrectedAmountNumber = (amountBigNumber, decimals) => {
+    const decimalCorrectedAmountString = utils.formatUnits(amountBigNumber.toString(), decimals);
 
     return Number(decimalCorrectedAmountString);
   };
-}
 
 export const getTransferTxParams = (token, to, amount) => {
   const erc20Helper = new ERC20Helper(token.address);
@@ -104,24 +100,7 @@ const isTokenAddressMainnetWETH = tokenAddress => {
 export const getTokenBalance = async (token, rpcURL, address, price) => {
   const erc20Helper = new ERC20Helper(token.address, null, rpcURL);
 
-  const balance = await erc20Helper.balanceOf(address);
+  const balanceBigNumber = await erc20Helper.balanceOf(address);
 
-  const inverseDecimalCorrectedAmountNumber = await erc20Helper.getInverseDecimalCorrectedAmountNumber(
-    balance,
-    token.decimals,
-  );
-
-  let digits = 2;
-
-  if (price > 1.1) {
-    digits = 4;
-  }
-
-  // if (isTokenAddressMainnetWETH(token.address)) {
-  //   digits = 4;
-  // }
-
-  const roundedDown = Math.floor(inverseDecimalCorrectedAmountNumber * Math.pow(10, digits)) / Math.pow(10, digits);
-
-  return roundedDown.toFixed(digits);
+  return balanceBigNumber;
 };
