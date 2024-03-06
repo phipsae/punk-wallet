@@ -86,6 +86,7 @@ import {
 } from "./helpers/TokenSettingsHelper";
 
 import { getChain } from "./helpers/ChainHelper";
+import { sendTokenTransaction } from "./helpers/NativeTokenHelper";
 
 const { confirm } = Modal;
 
@@ -846,9 +847,9 @@ function App(props) {
             networkSettingsHelper.updateSelectedName(incomingNetwork.name);
             setTargetNetwork(networkSettingsHelper.getSelectedItem(true));
 
-            let pushStateURL = "/"
+            let pushStateURL = "/";
 
-            if ((incomingParts.length > 1) && incomingParts[1] == "pk") {
+            if (incomingParts.length > 1 && incomingParts[1] == "pk") {
               pushStateURL = "pk" + window.location.hash;
             }
 
@@ -1234,59 +1235,16 @@ function App(props) {
                   const order = await placeIbanOrder(moneriumClient, address, ibanAddressObject, amount, networkName);
                   await initMoneriumOrders();
                 } else {
-                  let txConfig = {
-                    chainId: selectedChainId,
-                  };
-
-                  if (!selectedErc20Token) {
-                    let value;
-                    try {
-                      console.log("PARSE ETHER", amount);
-                      value = parseEther("" + amount);
-                      console.log("PARSEDVALUE", value);
-                    } catch (e) {
-                      const floatVal = parseFloat(amount).toFixed(8);
-
-                      console.log("floatVal", floatVal);
-                      // failed to parseEther, try something else
-                      value = parseEther("" + floatVal);
-                      console.log("PARSEDfloatVALUE", value);
-                    }
-
-                    txConfig.to = toAddress;
-                    txConfig.value = value;
-                  } else {
-                    if (selectedErc20Token) {
-                      txConfig.erc20 = {
-                        token: selectedErc20Token,
-                        to: toAddress,
-                        amount: amount,
-                      };
-                    }
-                  }
-
-                  if (networkName == "arbitrum") {
-                    //txConfig.gasLimit = 21000;
-                    //ask rpc for gas price
-                  } else if (networkName == "optimism") {
-                    //ask rpc for gas price
-                  } else if (networkName == "gnosis") {
-                    //ask rpc for gas price
-                  } else if (networkName == "polygon") {
-                    //ask rpc for gas price
-                  } else if (networkName == "goerli") {
-                    //ask rpc for gas price
-                  } else if (networkName == "sepolia") {
-                    //ask rpc for gas price
-                  } else {
-                    txConfig.gasPrice = gasPrice;
-                  }
-
-                  console.log("SEND AND NETWORK", targetNetwork);
-
-                  let result = tx(txConfig);
-                  result = await result;
-                  console.log(result);
+                  console.log("AMOUNT", amount);
+                  sendTokenTransaction({
+                    selectedChainId,
+                    selectedErc20Token,
+                    amount,
+                    gasPrice,
+                    tx,
+                    networkName,
+                    targetNetwork,
+                  });
                 }
 
                 // setToAddress("")
