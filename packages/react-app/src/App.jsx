@@ -1197,10 +1197,10 @@ function App(props) {
               ethMode={amountEthMode}
               address={address}
               provider={localProvider}
-              gasPrice={gasPrice}
               onChange={value => {
                 setAmount(value);
               }}
+              toAddress={toAddress}
             />
           )}
         </div>

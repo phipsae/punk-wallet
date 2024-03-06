@@ -70,3 +70,18 @@ export const sendTokenTransaction = async ({
   result = await result;
   console.log(result);
 };
+
+export const calculateGasCostTransaction = async (amount, provider, toAddress) => {
+  const stringAmount = amount.toString();
+  const fixedAmount = parseFloat(stringAmount).toFixed(18);
+  const tx = {
+    to: toAddress,
+    value: utils.parseEther(fixedAmount),
+  };
+  const estimatedGasLimit = await provider.estimateGas(tx);
+  const gasPrice = await provider.getGasPrice();
+  const usedGas = gasPrice.mul(estimatedGasLimit);
+  //   const stringGasCosts = utils.formatEther(usedGas);
+  //   console.log(stringGasCosts);
+  return usedGas;
+};

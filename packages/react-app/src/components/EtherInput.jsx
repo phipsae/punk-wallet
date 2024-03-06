@@ -2,37 +2,12 @@ import { Input } from "antd";
 import React, { useEffect, useState } from "react";
 import { useBalance } from "eth-hooks";
 
+import { calculateGasCostTransaction } from "../helpers/NativeTokenHelper";
+
 const { utils } = require("ethers");
 
-// small change in useEffect, display currentValue if it's provided by user
-
-/*
-  ~ What it does? ~
-
-  Displays input field for ETH/USD amount, with an option to convert between ETH and USD
-
-  ~ How can I use? ~
-
-  <EtherInput
-    autofocus
-    price={price}
-    value=100
-    placeholder="Enter amount"
-    onChange={value => {
-      setAmount(value);
-    }}
-  />
-
-  ~ Features ~
-
-  - Provide price={price} of ether and easily convert between USD and ETH
-  - Provide value={value} to specify initial amount of ether
-  - Provide placeholder="Enter amount" value for the input
-  - Control input change by onChange={value => { setAmount(value);}}
-*/
-
 export default function EtherInput(props) {
-  const [mode, setMode] = useState(props.ethMode ? props.token : (props.price ? "USD" : props.token));
+  const [mode, setMode] = useState(props.ethMode ? props.token : props.price ? "USD" : props.token);
   const [value, setValue] = useState();
   const [displayMax, setDisplayMax] = useState();
 
@@ -44,11 +19,15 @@ export default function EtherInput(props) {
   let floatBalance = parseFloat("0.00");
   let usingBalance = balance;
 
-  let gasCost = 0;
+  let gasCost;
 
   if (usingBalance) {
     if (props.gasPrice) {
-      gasCost = (parseInt(props.gasPrice, 10) * 150000) / 10 ** 18;
+      // gasCost = (parseInt(props.gasPrice, 10) * 150000) / 10 ** 18;
+    }
+    if (value) {
+      gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
+      console.log(gasCost);
     }
 
     const etherBalance = utils.formatEther(usingBalance);
@@ -116,6 +95,15 @@ export default function EtherInput(props) {
 
   return (
     <div>
+      <button
+        type="button"
+        onClick={() => {
+          console.log(calculateGasCostTransaction(value, props.provider, props.toAddress));
+        }}
+      >
+        {" "}
+        Click Me
+      </button>
       <span
         style={{ cursor: "pointer", color: "red", float: "right", marginTop: "-5px" }}
         onClick={() => {
