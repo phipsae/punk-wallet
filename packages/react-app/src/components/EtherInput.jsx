@@ -2,17 +2,30 @@ import { Input } from "antd";
 import React, { useEffect, useState } from "react";
 import AmountDollarSwitch from "./AmountDollarSwitch";
 
-import { calculateGasCostTransaction, hexToString } from "../helpers/NativeTokenHelper";
+import { calcGasCostInEther, getGasLimit, hexToString } from "../helpers/NativeTokenHelper";
+import { getGasPriceInfura } from "../hooks/GasPrice";
 
 const { ethers, utils } = require("ethers");
 
-export default function EtherInput({ setAmount, amount, price, dollarMode, setDollarMode, provider, balance }) {
+export default function EtherInput({
+  setAmount,
+  amount,
+  price,
+  dollarMode,
+  setDollarMode,
+  provider,
+  balance,
+  suggestedMaxFeePerGas,
+  setSuggestedMaxFeePerGas,
+}) {
   /// userValue in token amount
   const [userValueToken, setUserValueToken] = useState();
   /// displayed value can be token or usd
   const [displayValue, setDisplayValue] = useState();
 
-  const [gasCost, setGasCost] = useState();
+  const [gasLimit, setGasLimit] = useState();
+  // const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
+  // const [gasCost, setGasCost] = useState();
 
   useEffect(() => {
     if (Number.isNaN(userValueToken) || !(userValueToken > 0)) {
@@ -24,25 +37,28 @@ export default function EtherInput({ setAmount, amount, price, dollarMode, setDo
       console.log("Not a valid amount", displayValue);
       return;
     }
-    if (gasCost) {
+    if (gasLimit && suggestedMaxFeePerGas) {
       const userBalance = hexToString(balance);
-      const txGasCost = hexToString(gasCost);
+      const txGasCostInEther = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
+      console.log("UserBalance", userBalance);
+      console.log("TxGasCost", txGasCostInEther);
       if (userValueToken > userBalance) {
         console.log("You don't have enough funds");
         setAmount(undefined);
         return;
       }
-      console.log(Number(userValueToken) + Number(txGasCost));
-      console.log("Here", typeof userValueToken);
-      if (Number(userValueToken) + Number(txGasCost) > userBalance) {
+      if (Number(userValueToken) + Number(txGasCostInEther) > userBalance) {
         console.log("With gas it is more than you have");
-        setAmount(String(Number(userValueToken) - Number(txGasCost)));
-        return;
+        console.log("Amount less Gas Cost", Number(userValueToken) - Number(txGasCostInEther));
+        setAmount(String(Number(userValueToken) - Number(txGasCostInEther)));
       }
+    } else {
+      setAmount(userValueToken);
+      console.log("could not retrieve gasCost");
     }
 
-    setAmount(userValueToken);
-  }, [displayValue]);
+    // setAmount(userValueToken);
+  }, [displayValue, userValueToken, provider]);
 
   useEffect(() => {
     if (userValueToken === 0 || userValueToken === undefined) {
@@ -56,17 +72,26 @@ export default function EtherInput({ setAmount, amount, price, dollarMode, setDo
     }
   }, [dollarMode]);
 
-  const getGasCost = async () => {
-    const gas = await calculateGasCostTransaction(provider);
-    setGasCost(gas);
+  const getGasLimitEstimated = async () => {
+    const limit = await getGasLimit(provider);
+    setGasLimit(limit);
+  };
+
+  const getSuggestedMaxFeePerGas = async () => {
+    const maxFeePerGas = await getGasPriceInfura(provider, "high");
+    setSuggestedMaxFeePerGas(maxFeePerGas.suggestedMaxFeePerGas);
   };
 
   useEffect(() => {
-    // if (Number.isNaN(displayValue) || !(displayValue > 0)) {
-    //   console.log("Not a valid amount", displayValue);
-    //   return;
-    // }
-    getGasCost();
+    if (Number.isNaN(displayValue) || !(displayValue > 0)) {
+      console.log("Not a valid amount", displayValue);
+      return;
+    }
+
+    if (provider) {
+      getSuggestedMaxFeePerGas();
+      getGasLimitEstimated();
+    }
   }, [userValueToken, provider, displayValue]);
 
   // const handleMax = (setAmount, balance, dollarMode, price) => {
@@ -125,16 +150,22 @@ export default function EtherInput({ setAmount, amount, price, dollarMode, setDo
       <button
         type="button"
         onClick={async () => {
-          console.log("UserValueToken", userValueToken);
-          console.log("Display Value", displayValue);
-          console.log("Amount", typeof amount);
-          console.log("GasCost", hexToString(gasCost));
-          console.log("Balance", balance);
-          console.log("Hextostring", hexToString(balance));
+          console.log("suggestedMaxFeePerGas from click", suggestedMaxFeePerGas);
+          console.log("gasLimit", gasLimit);
+          console.log("provider", provider._network.chainId);
+          console.log("amount", amount);
           // console.log(handleMax(setValue, props.balance, props.dollarMode, props.price));
         }}
       >
         Click Me
+      </button>
+      <button
+        type="button"
+        onClick={async () => {
+          console.log("CalcGasCost", calcGasCostInEther(gasLimit, suggestedMaxFeePerGas));
+        }}
+      >
+        Calc GasCost
       </button>
       {/* <span
         style={{ cursor: "pointer", color: "red", float: "right", marginTop: "-5px" }}

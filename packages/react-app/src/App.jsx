@@ -925,6 +925,9 @@ function App(props) {
 
   const [priceERC20, setPriceERC20] = useState();
 
+  /// from Infura
+  const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
+
   const walletDisplay =
     web3Modal && web3Modal.cachedProvider ? (
       ""
@@ -1203,6 +1206,9 @@ function App(props) {
               dollarMode={dollarMode}
               setDollarMode={setDollarMode}
               balance={yourLocalBalance}
+              gasPrice={gasPrice}
+              suggestedMaxFeePerGas={suggestedMaxFeePerGas}
+              setSuggestedMaxFeePerGas={setSuggestedMaxFeePerGas}
             />
           )}
         </div>
@@ -1215,10 +1221,11 @@ function App(props) {
               key="submit"
               type="primary"
               disabled={
-                loading ||
-                !amount ||
-                (!toAddress && !(isMoneriumTransferReady && isCrossChain(moneriumRadio))) ||
-                (isValidIban(toAddress) && !isIbanAddressObjectValid(ibanAddressObject))
+                false
+                // loading ||
+                // !amount ||
+                // (!toAddress && !(isMoneriumTransferReady && isCrossChain(moneriumRadio))) ||
+                // (isValidIban(toAddress) && !isIbanAddressObjectValid(ibanAddressObject))
               }
               loading={loading}
               onClick={async () => {
@@ -1237,7 +1244,6 @@ function App(props) {
                   const order = await placeIbanOrder(moneriumClient, address, ibanAddressObject, amount, networkName);
                   await initMoneriumOrders();
                 } else {
-                  console.log("AMOUNT", amount);
                   sendTokenTransaction({
                     selectedChainId,
                     selectedErc20Token,
@@ -1246,6 +1252,7 @@ function App(props) {
                     tx,
                     networkName,
                     targetNetwork,
+                    suggestedMaxFeePerGas,
                   });
                 }
 
