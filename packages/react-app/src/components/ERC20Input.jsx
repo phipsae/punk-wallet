@@ -59,6 +59,16 @@ export default function ERC20Input({ token, balance, dollarMode, setDollarMode, 
 
   return (
     <div>
+      <button
+        type="button"
+        onClick={() => {
+          console.log("UserValue", userValue);
+          console.log("DisplayValue", displayValue);
+        }}
+      >
+        {" "}
+        Click Me
+      </button>
       <span
         style={{ cursor: "pointer", color: "red", float: "right", marginTop: "-5px" }}
         onClick={() => {

@@ -71,12 +71,13 @@ export const sendTokenTransaction = async ({
   console.log(result);
 };
 
-export const calculateGasCostTransaction = async (amount, provider, toAddress) => {
-  const stringAmount = amount.toString();
-  const fixedAmount = parseFloat(stringAmount).toFixed(18);
+export const calculateGasCostTransaction = async provider => {
+  // const stringAmount = amount.toString();
+  // const fixedAmount = parseFloat(stringAmount).toFixed(18);
   const tx = {
-    to: toAddress,
-    value: utils.parseEther(fixedAmount),
+    to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+    // value: utils.parseEther(fixedAmount),
+    value: utils.parseEther("1.1"),
   };
   const estimatedGasLimit = await provider.estimateGas(tx);
   const gasPrice = await provider.getGasPrice();
@@ -84,4 +85,23 @@ export const calculateGasCostTransaction = async (amount, provider, toAddress) =
   //   const stringGasCosts = utils.formatEther(usedGas);
   //   console.log(stringGasCosts);
   return usedGas;
+};
+
+export const calcAmount = (userValueNumber, dollarMode, price) => {
+  console.log("in here", userValueNumber, dollarMode, price);
+  if (!dollarMode) {
+    return userValueNumber;
+  }
+
+  return userValueNumber * price;
+};
+
+export const hexToString = hex => {
+  // Convert hex to BigNumber
+  const bigNumberValue = ethers.BigNumber.from(hex);
+  // Convert BigNumber to string
+  const stringValue = bigNumberValue.toString();
+  // Convert String to Ether Format
+  const etherFormat = utils.formatEther(stringValue);
+  return etherFormat;
 };

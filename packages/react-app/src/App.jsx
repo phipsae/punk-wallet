@@ -1193,14 +1193,16 @@ function App(props) {
             <EtherInput
               price={price || targetNetwork.price}
               value={amount}
+              amount={amount}
+              setAmount={setAmount}
               token={targetNetwork.token || "ETH"}
               ethMode={amountEthMode}
               address={address}
               provider={localProvider}
-              onChange={value => {
-                setAmount(value);
-              }}
               toAddress={toAddress}
+              dollarMode={dollarMode}
+              setDollarMode={setDollarMode}
+              balance={yourLocalBalance}
             />
           )}
         </div>

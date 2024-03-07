@@ -1,110 +1,142 @@
 import { Input } from "antd";
 import React, { useEffect, useState } from "react";
-import { useBalance } from "eth-hooks";
+import AmountDollarSwitch from "./AmountDollarSwitch";
 
-import { calculateGasCostTransaction } from "../helpers/NativeTokenHelper";
+import { calculateGasCostTransaction, hexToString } from "../helpers/NativeTokenHelper";
 
-const { utils } = require("ethers");
+const { ethers, utils } = require("ethers");
 
-export default function EtherInput(props) {
-  const [mode, setMode] = useState(props.ethMode ? props.token : props.price ? "USD" : props.token);
-  const [value, setValue] = useState();
-  const [displayMax, setDisplayMax] = useState();
+export default function EtherInput({ setAmount, amount, price, dollarMode, setDollarMode, provider, balance }) {
+  /// userValue in token amount
+  const [userValueToken, setUserValueToken] = useState();
+  /// displayed value can be token or usd
+  const [displayValue, setDisplayValue] = useState();
 
-  const currentValue = typeof props.value !== "undefined" ? props.value : value;
-
-  const [display, setDisplay] = useState(currentValue);
-
-  const balance = useBalance(props.provider, props.address, 1000);
-  let floatBalance = parseFloat("0.00");
-  let usingBalance = balance;
-
-  let gasCost;
-
-  if (usingBalance) {
-    if (props.gasPrice) {
-      // gasCost = (parseInt(props.gasPrice, 10) * 150000) / 10 ** 18;
-    }
-    if (value) {
-      gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
-      console.log(gasCost);
-    }
-
-    const etherBalance = utils.formatEther(usingBalance);
-    parseFloat(etherBalance).toFixed(2);
-    floatBalance = parseFloat(etherBalance - gasCost);
-    if (floatBalance < 0) {
-      floatBalance = 0;
-    }
-  }
-
-  let displayBalance = floatBalance.toFixed(4);
-
-  const price = props.price;
-
-  function getBalance(_mode) {
-    setValue(floatBalance);
-    if (_mode === "USD") {
-      displayBalance = (floatBalance * price).toFixed(2);
-    } else {
-      displayBalance = floatBalance.toFixed(4);
-    }
-    return displayBalance;
-  }
-
-  const option = title => {
-    if (!props.price) return "";
-    return (
-      <div
-        style={{ cursor: "pointer" }}
-        onClick={() => {
-          if (mode === "USD") {
-            setMode(props.token);
-            displayMax ? setDisplay(getBalance("ETH")) : setDisplay(currentValue);
-          } else if (mode === "ETH") {
-            setMode("USD");
-            if (currentValue) {
-              const usdValue = "" + (parseFloat(currentValue) * props.price).toFixed(2);
-              displayMax ? setDisplay(getBalance("USD")) : setDisplay(usdValue);
-            } else {
-              setDisplay(currentValue);
-            }
-          }
-        }}
-      >
-        {title}
-      </div>
-    );
-  };
-
-  let prefix;
-  let addonAfter;
-  if (mode === "USD") {
-    prefix = "$";
-    addonAfter = option("USD 🔀");
-  } else {
-    prefix = "Ξ";
-    addonAfter = option(props.token + " 🔀");
-  }
+  const [gasCost, setGasCost] = useState();
 
   useEffect(() => {
-    if (!currentValue && !displayMax) {
-      setDisplay("");
+    if (Number.isNaN(userValueToken) || !(userValueToken > 0)) {
+      console.log("Not a valid amount", userValueToken);
+      setAmount(undefined);
+      return;
     }
-  }, [currentValue]);
+    if (Number.isNaN(displayValue) || !(displayValue > 0)) {
+      console.log("Not a valid amount", displayValue);
+      return;
+    }
+    if (gasCost) {
+      const userBalance = hexToString(balance);
+      const txGasCost = hexToString(gasCost);
+      if (userValueToken > userBalance) {
+        console.log("You don't have enough funds");
+        setAmount(undefined);
+        return;
+      }
+      console.log(Number(userValueToken) + Number(txGasCost));
+      console.log("Here", typeof userValueToken);
+      if (Number(userValueToken) + Number(txGasCost) > userBalance) {
+        console.log("With gas it is more than you have");
+        setAmount(String(Number(userValueToken) - Number(txGasCost)));
+        return;
+      }
+    }
+
+    setAmount(userValueToken);
+  }, [displayValue]);
+
+  useEffect(() => {
+    if (userValueToken === 0 || userValueToken === undefined) {
+      return;
+    }
+
+    if (dollarMode) {
+      setDisplayValue(displayValue * price);
+    } else {
+      setDisplayValue(displayValue / price);
+    }
+  }, [dollarMode]);
+
+  const getGasCost = async () => {
+    const gas = await calculateGasCostTransaction(provider);
+    setGasCost(gas);
+  };
+
+  useEffect(() => {
+    // if (Number.isNaN(displayValue) || !(displayValue > 0)) {
+    //   console.log("Not a valid amount", displayValue);
+    //   return;
+    // }
+    getGasCost();
+  }, [userValueToken, provider, displayValue]);
+
+  // const handleMax = (setAmount, balance, dollarMode, price) => {
+  //   const gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
+  //   console.log("Gascost", gasCost);
+  //   console.log("Balance", props.balance._hex);
+  //   // setAmount(balance);
+
+  //   // setDisplayValue(calcDisplayValue(token, balance, dollarMode, price));
+  //   // setUserValue(0);
+  // };
+
+  // const balance = useBalance(props.provider, props.address, 1000);
+  // let floatBalance = parseFloat("0.00");
+  // let usingBalance = balance;
+
+  // if (usingBalance) {
+  //   if (props.gasPrice) {
+  //     // gasCost = (parseInt(props.gasPrice, 10) * 150000) / 10 ** 18;
+  //   }
+  //   if (value) {
+  //     gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
+  //     console.log(gasCost);
+  //   }
+
+  //   const etherBalance = utils.formatEther(usingBalance);
+  //   parseFloat(etherBalance).toFixed(2);
+  //   floatBalance = parseFloat(etherBalance - gasCost);
+  //   if (floatBalance < 0) {
+  //     floatBalance = 0;
+  //   }
+  // }
+
+  // let displayBalance = floatBalance.toFixed(4);
+
+  // const price = props.price;
+
+  // function getBalance(_mode) {
+  //   setValue(floatBalance);
+  //   if (_mode === "USD") {
+  //     displayBalance = (floatBalance * price).toFixed(2);
+  //   } else {
+  //     displayBalance = floatBalance.toFixed(4);
+  //   }
+  //   return displayBalance;
+  // }
+
+  // useEffect(() => {
+  //   if (!currentValue && !displayMax) {
+  //     setDisplay("");
+  //   }
+  // }, [currentValue]);
 
   return (
     <div>
       <button
         type="button"
-        onClick={() => {
-          console.log(calculateGasCostTransaction(value, props.provider, props.toAddress));
+        onClick={async () => {
+          console.log("UserValueToken", userValueToken);
+          console.log("Display Value", displayValue);
+          console.log("Amount", typeof amount);
+          console.log("GasCost", hexToString(gasCost));
+          console.log("Balance", balance);
+          console.log("Hextostring", hexToString(balance));
+          // console.log(handleMax(setValue, props.balance, props.dollarMode, props.price));
         }}
       >
-        {" "}
         Click Me
       </button>
-      <span
+      {/* <span
         style={{ cursor: "pointer", color: "red", float: "right", marginTop: "-5px" }}
         onClick={() => {
           setDisplay(getBalance(mode));
@@ -115,37 +147,31 @@ export default function EtherInput(props) {
         }}
       >
         max
-      </span>
+      </span> */}
       <Input
-        placeholder={props.placeholder ? props.placeholder : "amount in " + mode}
-        autoFocus={props.autoFocus}
-        prefix={prefix}
-        value={display}
-        addonAfter={addonAfter}
-        onChange={async e => {
-          const newValue = e.target.value;
-          setDisplayMax(false);
-          if (mode === "USD") {
-            const possibleNewValue = parseFloat(newValue);
-            if (possibleNewValue) {
-              const ethValue = possibleNewValue / props.price;
-              setValue(ethValue);
-              if (typeof props.onChange === "function") {
-                props.onChange(ethValue);
-              }
-              setDisplay(newValue);
-            } else {
-              setDisplay(newValue);
-            }
-          } else {
-            setValue(newValue);
-            if (typeof props.onChange === "function") {
-              props.onChange(newValue);
-            }
-            setDisplay(newValue);
+        placeholder={"amount in " + (dollarMode ? "USD" : "ETH")}
+        // autoFocus={props.autoFocus}
+        prefix={<Prefix dollarMode={dollarMode} />}
+        value={displayValue}
+        addonAfter={<AmountDollarSwitch nativeToken dollarMode={dollarMode} setDollarMode={setDollarMode} />}
+        onChange={e => {
+          setDisplayValue(e.target.value);
+          if (!dollarMode) {
+            setUserValueToken(e.target.value);
+          }
+          if (dollarMode) {
+            setUserValueToken(e.target.value / price);
           }
         }}
       />
     </div>
   );
 }
+
+const Prefix = ({ dollarMode }) => {
+  if (dollarMode) {
+    return "$";
+  }
+
+  return <span>Ξ</span>;
+};
