@@ -45,7 +45,7 @@ export const sendTokenTransaction = async ({
   }
 
   txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
-  console.log("suggestedMaxFeePerGas", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
+  console.log("suggestedMaxFeePerGas form Send Transaction", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
   console.log("gasPrice", gasPrice);
   txConfig.gasLimit = ethers.utils.hexlify(55000);
 
@@ -60,19 +60,29 @@ export const sendTokenTransaction = async ({
   console.log(result);
 };
 
-export const getGasLimit = async provider => {
+export const getGasLimit = async () => {
   // const stringAmount = amount.toString();
   // const fixedAmount = parseFloat(stringAmount).toFixed(18);
-  const tx = {
-    to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
-    // value: utils.parseEther(fixedAmount),
-    value: utils.parseEther("0.01"),
-  };
+  // const tx = {
+  //   to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+  //   // value: utils.parseEther(fixedAmount),
+  //   value: utils.parseEther("0.01"),
+  // };
   // const estimatedGasLimit = await provider.estimateGas(tx);
   const estimatedGasLimit = ethers.utils.hexlify(55000);
   return estimatedGasLimit;
 };
-export const hexToString = hex => {
+// export const hexToString = hex => {
+//   // Convert hex to BigNumber
+//   const bigNumberValue = ethers.BigNumber.from(hex);
+//   // Convert BigNumber to string
+//   const stringValue = bigNumberValue.toString();
+//   // Convert String to Ether Format
+//   const etherFormat = utils.formatEther(stringValue);
+//   return etherFormat;
+// };
+
+export const hexToEther = hex => {
   // Convert hex to BigNumber
   const bigNumberValue = ethers.BigNumber.from(hex);
   // Convert BigNumber to string
@@ -82,6 +92,14 @@ export const hexToString = hex => {
   return etherFormat;
 };
 
+export const hexToString = hex => {
+  // Convert hex to BigNumber
+  const bigNumberValue = ethers.BigNumber.from(hex);
+  // Convert BigNumber to string
+  const stringValue = bigNumberValue.toString();
+  return stringValue;
+};
+
 export const calcGasCostInEther = (gasLimit, gasPrice) => {
   // Convert hex to BigNumber
   const bigNumberValue = ethers.BigNumber.from(gasLimit);
@@ -89,8 +107,10 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
   const txGasLimit = bigNumberValue.toString();
 
   const gasPriceInWei = ethers.utils.parseUnits(gasPrice, "gwei");
+  console.log(gasPriceInWei, "gasPriceInWei");
+  console.log(txGasLimit, "txGasLimit");
 
-  const gasPriceInEther = hexToString(gasPriceInWei);
+  const gasPriceInEther = hexToEther(gasPriceInWei);
   console.log("GasCost in Ether", Number(gasPriceInEther) * Number(txGasLimit));
   const gasCost = Number(gasPriceInEther) * Number(txGasLimit);
   return gasCost;

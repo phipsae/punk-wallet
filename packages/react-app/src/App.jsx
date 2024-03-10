@@ -925,6 +925,8 @@ function App(props) {
 
   const [priceERC20, setPriceERC20] = useState();
 
+  const [sendWarning, setSendWarning] = useState();
+
   /// from Infura
   const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
 
@@ -1209,9 +1211,12 @@ function App(props) {
               gasPrice={gasPrice}
               suggestedMaxFeePerGas={suggestedMaxFeePerGas}
               setSuggestedMaxFeePerGas={setSuggestedMaxFeePerGas}
+              network={targetNetwork}
+              setSendWarning={setSendWarning}
             />
           )}
         </div>
+        <div> {sendWarning} </div>
 
         <div style={{ position: "relative", top: 10, left: 40 }}> {networkDisplay} </div>
 

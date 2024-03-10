@@ -1,9 +1,11 @@
 import axios from "axios";
 import { usePoller } from "eth-hooks";
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { ethers, utils } from "ethers";
 import { ETHERSCAN_KEY } from "../constants";
 import "dotenv/config";
+import { estimateTotalGasCost, estimateL1GasCost } from "@eth-optimism/sdk";
+import { calcGasCostInEther } from "../helpers/NativeTokenHelper";
 
 require("dotenv").config();
 
@@ -12,8 +14,8 @@ export default function useGasPrice(targetNetwork, speed, providerToAsk) {
 
   const loadGasPrice = async () => {
     if (targetNetwork.gasPrice) {
-      // console.log("TargetNetwork Gasprice", targetNetwork.gasPrice);
-      // setGasPrice(targetNetwork.gasPrice);
+      console.log("TargetNetwork Gasprice", targetNetwork.gasPrice);
+      setGasPrice(targetNetwork.gasPrice);
     } else {
       if (providerToAsk) {
         try {
@@ -57,10 +59,42 @@ export const getGasPriceInfura = async (provider, speed) => {
     const { data } = await axios.get(`https://gas.api.infura.io/networks/${chainId}/suggestedGasFees`, {
       headers: { Authorization: `Basic ${Auth}` },
     });
-    console.log("Suggested gas fees from getGasPriceInfura function:", data);
+    console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
     return data[speed];
   } catch (error) {
     console.log("Server responded with:", error);
     return error;
   }
+};
+
+const tx = {
+  to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+  value: utils.parseEther("0.01"),
+  data: "0x",
+  // value: "0.00001",
+  type: 2,
+  // maxFeePerGas: 2e9,
+};
+
+/// https://sdk.optimism.io/
+export const estimateTotalGasCostOptimism = async provider => {
+  return estimateTotalGasCost(provider, tx);
+};
+
+const totalGasCost = async (_gasPrice, _gasLimit, _totalGasOP, _chainId) => {
+  let gasCost;
+  /// mainnet, polygon, sepolia
+  if (_chainId === 1 || _chainId === 137 || _chainId === 11155111) {
+    gasCost = calcGasCostInEther(_gasLimit, _gasPrice);
+  }
+  /// optimism, base
+  else if (_chainId === 10 || _chainId === 8453) {
+    gasCost = _totalGasOP;
+    console.log("OP", gasCost);
+  }
+  /// all the other networks w/o gasEstimate
+  else {
+    console.log("not able to estimate gas cost");
+  }
+  return gasCost;
 };

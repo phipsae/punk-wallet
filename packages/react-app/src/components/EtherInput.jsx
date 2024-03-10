@@ -2,8 +2,8 @@ import { Input } from "antd";
 import React, { useEffect, useState } from "react";
 import AmountDollarSwitch from "./AmountDollarSwitch";
 
-import { calcGasCostInEther, getGasLimit, hexToString } from "../helpers/NativeTokenHelper";
-import { getGasPriceInfura } from "../hooks/GasPrice";
+import { calcGasCostInEther, getGasLimit, hexToEther } from "../helpers/NativeTokenHelper";
+import { getGasPriceInfura, estimateTotalGasCostOptimism } from "../hooks/GasPrice";
 
 const { ethers, utils } = require("ethers");
 
@@ -17,6 +17,8 @@ export default function EtherInput({
   balance,
   suggestedMaxFeePerGas,
   setSuggestedMaxFeePerGas,
+  network,
+  setSendWarning,
 }) {
   /// userValue in token amount
   const [userValueToken, setUserValueToken] = useState();
@@ -24,8 +26,7 @@ export default function EtherInput({
   const [displayValue, setDisplayValue] = useState();
 
   const [gasLimit, setGasLimit] = useState();
-  // const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
-  // const [gasCost, setGasCost] = useState();
+  const [totalGasOP, setTotalGasOP] = useState();
 
   useEffect(() => {
     if (Number.isNaN(userValueToken) || !(userValueToken > 0)) {
@@ -37,20 +38,40 @@ export default function EtherInput({
       console.log("Not a valid amount", displayValue);
       return;
     }
-    if (gasLimit && suggestedMaxFeePerGas) {
-      const userBalance = hexToString(balance);
-      const txGasCostInEther = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
+    let totalGasCost;
+    const userBalance = hexToEther(balance);
+    if (provider) {
+      if (
+        gasLimit &&
+        suggestedMaxFeePerGas &&
+        (network.chainId === 1 || network.chainId === 137 || network.chainId === 11155111)
+      ) {
+        totalGasCost = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
+        console.log("ETHEREUM totalGasCost", totalGasCost);
+      }
+      /// optimism, base
+      else if (totalGasOP && (network.chainId === 10 || network.chainId === 8453)) {
+        totalGasCost = hexToEther(totalGasOP);
+        console.log("OP totalGasCost", totalGasCost);
+      }
+      /// all the other networks w/o gasEstimate
+      else {
+        console.log("not able to estimate gas cost");
+        setSendWarning("⚠️ not able to estimate gas cost");
+      }
       console.log("UserBalance", userBalance);
-      console.log("TxGasCost", txGasCostInEther);
+      console.log("TxGasCost", totalGasCost);
       if (userValueToken > userBalance) {
         console.log("You don't have enough funds");
+        setSendWarning("⚠️ You don't have enough funds");
         setAmount(undefined);
         return;
       }
-      if (Number(userValueToken) + Number(txGasCostInEther) > userBalance) {
+      if (Number(userValueToken) + Number(totalGasCost) > userBalance) {
         console.log("With gas it is more than you have");
-        console.log("Amount less Gas Cost", Number(userValueToken) - Number(txGasCostInEther));
-        setAmount(String(Number(userValueToken) - Number(txGasCostInEther)));
+        setSendWarning("⚠️ With gas it is more than you have");
+        console.log("Amount less Gas Cost", Number(userValueToken) - Number(totalGasCost));
+        setAmount(String(Number(userValueToken) - Number(totalGasCost)));
       }
     } else {
       setAmount(userValueToken);
@@ -77,6 +98,11 @@ export default function EtherInput({
     setGasLimit(limit);
   };
 
+  const getEstimateTotalGasCostOptimism = async () => {
+    const totalGas = await estimateTotalGasCostOptimism(provider);
+    setTotalGasOP(totalGas);
+  };
+
   const getSuggestedMaxFeePerGas = async () => {
     const maxFeePerGas = await getGasPriceInfura(provider, "high");
     setSuggestedMaxFeePerGas(maxFeePerGas.suggestedMaxFeePerGas);
@@ -89,10 +115,16 @@ export default function EtherInput({
     }
 
     if (provider) {
-      getSuggestedMaxFeePerGas();
-      getGasLimitEstimated();
+      if (network.chainId === 1 || network.chainId === 137 || network.chainId === 11155111) {
+        getSuggestedMaxFeePerGas();
+        getGasLimitEstimated();
+      }
+      if (network.chainId === 10) {
+        console.log("OP GAS ESTIMATE", totalGasOP);
+        getEstimateTotalGasCostOptimism();
+      }
     }
-  }, [userValueToken, provider, displayValue]);
+  }, [userValueToken, provider, displayValue, network]);
 
   // const handleMax = (setAmount, balance, dollarMode, price) => {
   //   const gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
@@ -150,10 +182,12 @@ export default function EtherInput({
       <button
         type="button"
         onClick={async () => {
-          console.log("suggestedMaxFeePerGas from click", suggestedMaxFeePerGas);
-          console.log("gasLimit", gasLimit);
-          console.log("provider", provider._network.chainId);
-          console.log("amount", amount);
+          // console.log("suggestedMaxFeePerGas from click", suggestedMaxFeePerGas);
+          // console.log("gasLimit", gasLimit);
+          // console.log("provider", provider._network.chainId);
+          // console.log("amount", amount);
+          // console.log("totalGas", hexToString(totalGasOP));
+          console.log("ChainID", network.chainId);
           // console.log(handleMax(setValue, props.balance, props.dollarMode, props.price));
         }}
       >
@@ -162,7 +196,7 @@ export default function EtherInput({
       <button
         type="button"
         onClick={async () => {
-          console.log("CalcGasCost", calcGasCostInEther(gasLimit, suggestedMaxFeePerGas));
+          console.log("FROM BUTTON", suggestedMaxFeePerGas);
         }}
       >
         Calc GasCost
