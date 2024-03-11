@@ -2,26 +2,26 @@ import { Input } from "antd";
 import React, { useEffect, useState } from "react";
 import AmountDollarSwitch from "./AmountDollarSwitch";
 
-import { calcGasCostInEther, getGasLimit, hexToEther, formatDisplayValue } from "../helpers/NativeTokenHelper";
-import { getGasPriceInfura, estimateTotalGasCostOptimism } from "../hooks/GasPrice";
+import { hexToEther, formatDisplayValue } from "../helpers/NativeTokenHelper";
+import { getGasPriceInfura, estimateTotalGasCostOptimism, getGasLimit, calcGasCostInEther } from "../hooks/GasPrice";
 
 export default function EtherInput({
-  amount,
   setAmount,
   price,
   dollarMode,
   setDollarMode,
   provider,
   balance,
+  gasPrice,
   suggestedMaxFeePerGas,
   setSuggestedMaxFeePerGas,
   network,
   setSendWarning,
+  displayValue,
+  setDisplayValue,
 }) {
   /// userValue in token amount
   const [userValueToken, setUserValueToken] = useState();
-  /// displayValue can be token or usd
-  const [displayValue, setDisplayValue] = useState();
 
   const [gasLimit, setGasLimit] = useState();
   const [totalGasOP, setTotalGasOP] = useState();

@@ -40,7 +40,8 @@ import {
 } from "./components";
 import { INFURA_ID, NETWORK, NETWORKS } from "./constants";
 import { Transactor } from "./helpers";
-import { useBalance, useExchangePrice, useGasPrice, useLocalStorage, usePoller, useUserProvider } from "./hooks";
+import { useBalance, useExchangePrice, useLocalStorage, usePoller, useUserProvider } from "./hooks";
+import { useGasPrice } from "./hooks/GasPrice";
 
 import WalletConnect from "@walletconnect/client";
 
@@ -927,6 +928,9 @@ function App(props) {
 
   const [sendWarning, setSendWarning] = useState(" ");
 
+  /// displayValue can be token or usd in the Input Send field
+  const [displayValue, setDisplayValue] = useState();
+
   /// from Infura
   const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
 
@@ -1213,6 +1217,8 @@ function App(props) {
               setSuggestedMaxFeePerGas={setSuggestedMaxFeePerGas}
               network={targetNetwork}
               setSendWarning={setSendWarning}
+              displayValue={displayValue}
+              setDisplayValue={setDisplayValue}
             />
           )}
         </div>
@@ -1262,8 +1268,9 @@ function App(props) {
                   });
                 }
 
-                // setToAddress("")
-                // setAmount("");
+                setToAddress("");
+                setDisplayValue("");
+                setAmount("");
                 setData("");
 
                 setShowHistory(true);

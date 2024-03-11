@@ -1,4 +1,4 @@
-const { ethers, utils, BigNumber } = require("ethers");
+const { ethers, utils } = require("ethers");
 
 export const getNativeTokenBalance = async (provider, address) => {
   const balanceBigNumber = await provider.getBalance(address);
@@ -10,7 +10,6 @@ export const sendTokenTransaction = async ({
   amount,
   toAddress,
   gasPrice,
-  suggestedMaxFeePerGas,
   tx,
 }) => {
   const txConfig = {
@@ -59,16 +58,16 @@ export const sendTokenTransaction = async ({
   console.log(result);
 };
 
-export const getGasLimit = async provider => {
-  // const fixedAmount = parseFloat(stringAmount).toFixed(18);
-  const tx = {
-    to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
-    // value: utils.parseEther(fixedAmount),
-    value: utils.parseEther("0.01"),
-  };
-  const estimatedGasLimit = await provider.estimateGas(tx);
-  return estimatedGasLimit;
-};
+// export const getGasLimit = async provider => {
+//   // const fixedAmount = parseFloat(stringAmount).toFixed(18);
+//   const tx = {
+//     to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+//     // value: utils.parseEther(fixedAmount),
+//     value: utils.parseEther("0.01"),
+//   };
+//   const estimatedGasLimit = await provider.estimateGas(tx);
+//   return estimatedGasLimit;
+// };
 
 export const hexToEther = hex => {
   // Convert hex to BigNumber
@@ -87,22 +86,6 @@ export const hexToString = hex => {
   // Convert BigNumber to string
   const stringValue = bigNumberValue.toString();
   return stringValue;
-};
-
-export const calcGasCostInEther = (gasLimit, gasPrice) => {
-  // Convert hex to BigNumber
-  const bigNumberValue = ethers.BigNumber.from(gasLimit);
-  // Convert BigNumber to string
-  const txGasLimit = bigNumberValue.toString();
-
-  const gasPriceInWei = ethers.utils.parseUnits(gasPrice, "gwei");
-  console.log(gasPriceInWei, "gasPriceInWei");
-  console.log(txGasLimit, "txGasLimit");
-
-  const gasPriceInEther = hexToEther(gasPriceInWei);
-  console.log("GasCost in Ether", Number(gasPriceInEther) * Number(txGasLimit));
-  const gasCost = Number(gasPriceInEther) * Number(txGasLimit);
-  return gasCost;
 };
 
 export const formatNumberWithDecimals = (number, decimalPlaces) => {

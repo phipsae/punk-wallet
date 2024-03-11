@@ -6,38 +6,49 @@ import { ethers, utils } from "ethers";
 import { estimateTotalGasCost } from "@eth-optimism/sdk";
 import { ETHERSCAN_KEY } from "../constants";
 import "dotenv/config";
-import { calcGasCostInEther } from "../helpers/NativeTokenHelper";
+import { hexToEther } from "../helpers/NativeTokenHelper";
 
 require("dotenv").config();
 
-export default function useGasPrice(targetNetwork, speed, providerToAsk) {
+const Auth = Buffer.from(
+  process.env.REACT_APP_INFURA_API_KEY + ":" + process.env.REACT_APP_INFURA_API_KEY_SECRET,
+).toString("base64");
+
+export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
   const [gasPrice, setGasPrice] = useState();
 
   const loadGasPrice = async () => {
-    if (targetNetwork.gasPrice) {
-      console.log("TargetNetwork Gasprice", targetNetwork.gasPrice);
-      setGasPrice(targetNetwork.gasPrice);
-    } else {
-      if (providerToAsk) {
+    if (providerToAsk) {
+      try {
+        const chainId = targetNetwork.chainId;
+        const { data } = await axios.get(`https://gas.api.infura.io/networks/${chainId}/suggestedGasFees`, {
+          headers: { Authorization: `Basic ${Auth}` },
+        });
+        // console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
+        setGasPrice(data[speed]);
+      } catch (error) {
+        console.log("Error fetching gas with infura:", error);
         try {
-          /// ethers.js gasEstimate here
+          /// ethers.js gasEstimate here as fallback if Infura key not available
+          console.log("Ethers.js gas");
           const gasPriceResult = await providerToAsk.getGasPrice();
           if (gasPriceResult) setGasPrice(gasPriceResult);
         } catch (e) {
           console.log("error getting gas", e);
         }
-      } else {
-        axios
-          .get("https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" + ETHERSCAN_KEY)
-          .then(response => {
-            const newGasPrice = ethers.utils.parseUnits(response.data.result["ProposeGasPrice"], "gwei");
-            if (newGasPrice !== gasPrice) {
-              setGasPrice(newGasPrice);
-            }
-          })
-          .catch(error => console.log(error));
       }
+    } else {
+      axios
+        .get("https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" + ETHERSCAN_KEY)
+        .then(response => {
+          const newGasPrice = ethers.utils.parseUnits(response.data.result.ProposeGasPrice, "gwei");
+          if (newGasPrice !== gasPrice) {
+            setGasPrice(newGasPrice);
+          }
+        })
+        .catch(error => console.log(error));
     }
+    // }
   };
 
   useEffect(() => {
@@ -47,11 +58,7 @@ export default function useGasPrice(targetNetwork, speed, providerToAsk) {
 
   usePoller(loadGasPrice, 4200);
   return gasPrice;
-}
-
-const Auth = Buffer.from(
-  process.env.REACT_APP_INFURA_API_KEY + ":" + process.env.REACT_APP_INFURA_API_KEY_SECRET,
-).toString("base64");
+};
 
 /// speed can be low, medium, high
 export const getGasPriceInfura = async (provider, speed) => {
@@ -82,20 +89,70 @@ export const estimateTotalGasCostOptimism = async provider => {
   return estimateTotalGasCost(provider, txL2);
 };
 
-const totalGasCost = async (_gasPrice, _gasLimit, _totalGasOP, _chainId) => {
-  let gasCost;
-  /// mainnet, polygon, sepolia
-  if (_chainId === 1 || _chainId === 137 || _chainId === 11155111) {
-    gasCost = calcGasCostInEther(_gasLimit, _gasPrice);
-  }
-  /// optimism, base
-  else if (_chainId === 10 || _chainId === 8453) {
-    gasCost = _totalGasOP;
-    console.log("OP", gasCost);
-  }
-  /// all the other networks w/o gasEstimate
-  else {
-    console.log("not able to estimate gas cost");
-  }
+export const getGasLimit = async provider => {
+  // const fixedAmount = parseFloat(stringAmount).toFixed(18);
+  const tx = {
+    to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+    // value: utils.parseEther(fixedAmount),
+    value: utils.parseEther("0.01"),
+  };
+  const estimatedGasLimit = await provider.estimateGas(tx);
+  return estimatedGasLimit;
+};
+
+export const calcGasCostInEther = (gasLimit, gasPrice) => {
+  // Convert hex to BigNumber
+  const bigNumberValue = ethers.BigNumber.from(gasLimit);
+  // Convert BigNumber to string
+  const txGasLimit = bigNumberValue.toString();
+
+  const gasPriceInWei = ethers.utils.parseUnits(gasPrice, "gwei");
+  console.log(gasPriceInWei, "gasPriceInWei");
+  console.log(txGasLimit, "txGasLimit");
+
+  const gasPriceInEther = hexToEther(gasPriceInWei);
+  console.log("GasCost in Ether", Number(gasPriceInEther) * Number(txGasLimit));
+  const gasCost = Number(gasPriceInEther) * Number(txGasLimit);
   return gasCost;
 };
+
+// export default function useGasPrice(targetNetwork, speed, providerToAsk) {
+//   const [gasPrice, setGasPrice] = useState();
+
+//   const loadGasPrice = async () => {
+//     console.log(targetNetwork.gasPrice, "targetNetwork");
+//     // if (targetNetwork.gasPrice) {
+//     //   console.log("TargetNetwork Gasprice", targetNetwork.gasPrice);
+//     //   setGasPrice(targetNetwork.gasPrice);
+//     // } else {
+//     if (providerToAsk) {
+//       try {
+//         /// ethers.js gasEstimate here
+//         console.log("Ethers.js gas");
+//         const gasPriceResult = await providerToAsk.getGasPrice();
+//         if (gasPriceResult) setGasPrice(gasPriceResult);
+//       } catch (e) {
+//         console.log("error getting gas", e);
+//       }
+//     } else {
+//       axios
+//         .get("https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" + ETHERSCAN_KEY)
+//         .then(response => {
+//           const newGasPrice = ethers.utils.parseUnits(response.data.result["ProposeGasPrice"], "gwei");
+//           if (newGasPrice !== gasPrice) {
+//             setGasPrice(newGasPrice);
+//           }
+//         })
+//         .catch(error => console.log(error));
+//     }
+//     // }
+//   };
+
+//   useEffect(() => {
+//     setGasPrice();
+//     loadGasPrice();
+//   }, [targetNetwork]);
+
+//   usePoller(loadGasPrice, 4200);
+//   return gasPrice;
+// }
