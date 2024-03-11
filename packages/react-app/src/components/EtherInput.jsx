@@ -2,14 +2,12 @@ import { Input } from "antd";
 import React, { useEffect, useState } from "react";
 import AmountDollarSwitch from "./AmountDollarSwitch";
 
-import { calcGasCostInEther, getGasLimit, hexToEther } from "../helpers/NativeTokenHelper";
+import { calcGasCostInEther, getGasLimit, hexToEther, formatDisplayValue } from "../helpers/NativeTokenHelper";
 import { getGasPriceInfura, estimateTotalGasCostOptimism } from "../hooks/GasPrice";
 
-const { ethers, utils } = require("ethers");
-
 export default function EtherInput({
-  setAmount,
   amount,
+  setAmount,
   price,
   dollarMode,
   setDollarMode,
@@ -22,11 +20,87 @@ export default function EtherInput({
 }) {
   /// userValue in token amount
   const [userValueToken, setUserValueToken] = useState();
-  /// displayed value can be token or usd
+  /// displayValue can be token or usd
   const [displayValue, setDisplayValue] = useState();
 
   const [gasLimit, setGasLimit] = useState();
   const [totalGasOP, setTotalGasOP] = useState();
+  const [maxButton, setMaxButton] = useState(false);
+  const [providerFull, setProviderFull] = useState();
+
+  /// resolve provider for gas calc in useEffect
+  const getProvider = async () => {
+    setProviderFull(provider);
+  };
+
+  /// L1 gas calc
+  const getGasLimitEstimated = async () => {
+    const limit = await getGasLimit(provider);
+    setGasLimit(limit);
+  };
+
+  const getSuggestedMaxFeePerGas = async () => {
+    const maxFeePerGas = await getGasPriceInfura(provider, "high");
+    setSuggestedMaxFeePerGas(maxFeePerGas.suggestedMaxFeePerGas);
+  };
+
+  /// L2 OP gas calc
+  const getEstimateTotalGasCostOptimism = async () => {
+    const totalGas = await estimateTotalGasCostOptimism(provider);
+    setTotalGasOP(totalGas);
+  };
+
+  const [max, setMax] = useState();
+
+  const handleMax = () => {
+    const userBalance = hexToEther(balance);
+    setMax(!max);
+    setSendWarning("");
+    setUserValueToken(userBalance);
+    if (!dollarMode) {
+      setDisplayValue(formatDisplayValue(userBalance, dollarMode));
+    }
+    if (dollarMode) {
+      setDisplayValue(formatDisplayValue(userBalance * price, dollarMode));
+    }
+  };
+
+  const totalGasCalc = networkId => {
+    let totalGasCost;
+    if (gasLimit && suggestedMaxFeePerGas && (networkId === 1 || networkId === 137 || networkId === 11155111)) {
+      totalGasCost = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
+      console.log("ETHEREUM totalGasCost", totalGasCost);
+    }
+    /// optimism, base
+    else if (totalGasOP && (networkId === 10 || networkId === 8453)) {
+      totalGasCost = hexToEther(totalGasOP);
+      console.log("OP totalGasCost", totalGasCost);
+    }
+    /// all the other networks w/o gasEstimate
+    else {
+      console.log("gas calculation not possible");
+    }
+    return totalGasCost;
+  };
+
+  const calcAmount = (_sendAmount, _userBalance, _totalGasCost) => {
+    console.log("IN HEREEEE", _userBalance, _totalGasCost);
+    if (_sendAmount > _userBalance) {
+      console.log("CASE1");
+      setSendWarning("⚠️ You don't have enough funds");
+      setAmount(undefined);
+    } else if (_totalGasCost > _userBalance) {
+      console.log("CASE2");
+      setSendWarning("⚠️ Gas cost is higher than your balance");
+      setAmount(undefined);
+    } else if (Number(_sendAmount) + Number(_totalGasCost) > _userBalance) {
+      setAmount(String(Number(_sendAmount) - Number(_totalGasCost)));
+      setSendWarning("");
+    } else {
+      setAmount(_sendAmount);
+      setSendWarning("");
+    }
+  };
 
   useEffect(() => {
     if (Number.isNaN(userValueToken) || !(userValueToken > 0)) {
@@ -38,48 +112,16 @@ export default function EtherInput({
       console.log("Not a valid amount", displayValue);
       return;
     }
-    let totalGasCost;
-    const userBalance = hexToEther(balance);
-    if (provider) {
-      if (
-        gasLimit &&
-        suggestedMaxFeePerGas &&
-        (network.chainId === 1 || network.chainId === 137 || network.chainId === 11155111)
-      ) {
-        totalGasCost = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
-        console.log("ETHEREUM totalGasCost", totalGasCost);
-      }
-      /// optimism, base
-      else if (totalGasOP && (network.chainId === 10 || network.chainId === 8453)) {
-        totalGasCost = hexToEther(totalGasOP);
-        console.log("OP totalGasCost", totalGasCost);
-      }
-      /// all the other networks w/o gasEstimate
-      else {
-        console.log("not able to estimate gas cost");
-        setSendWarning("⚠️ not able to estimate gas cost");
-      }
-      console.log("UserBalance", userBalance);
-      console.log("TxGasCost", totalGasCost);
-      if (userValueToken > userBalance) {
-        console.log("You don't have enough funds");
-        setSendWarning("⚠️ You don't have enough funds");
-        setAmount(undefined);
-        return;
-      }
-      if (Number(userValueToken) + Number(totalGasCost) > userBalance) {
-        console.log("With gas it is more than you have");
-        setSendWarning("⚠️ With gas it is more than you have");
-        console.log("Amount less Gas Cost", Number(userValueToken) - Number(totalGasCost));
-        setAmount(String(Number(userValueToken) - Number(totalGasCost)));
-      }
-    } else {
-      setAmount(userValueToken);
-      console.log("could not retrieve gasCost");
-    }
 
-    // setAmount(userValueToken);
-  }, [displayValue, userValueToken, provider]);
+    if (providerFull && balance) {
+      console.log("In here?");
+      const userBalance = hexToEther(balance);
+      const totalGasCost = totalGasCalc(network.chainId);
+      console.log("Total Gas Cost", totalGasCost);
+      console.log("userBalance", userBalance);
+      calcAmount(userValueToken, userBalance, totalGasCost);
+    }
+  }, [displayValue, userValueToken, provider, max, suggestedMaxFeePerGas, totalGasOP]);
 
   useEffect(() => {
     if (userValueToken === 0 || userValueToken === undefined) {
@@ -93,133 +135,80 @@ export default function EtherInput({
     }
   }, [dollarMode]);
 
-  const getGasLimitEstimated = async () => {
-    const limit = await getGasLimit(provider);
-    setGasLimit(limit);
-  };
-
-  const getEstimateTotalGasCostOptimism = async () => {
-    const totalGas = await estimateTotalGasCostOptimism(provider);
-    setTotalGasOP(totalGas);
-  };
-
-  const getSuggestedMaxFeePerGas = async () => {
-    const maxFeePerGas = await getGasPriceInfura(provider, "high");
-    setSuggestedMaxFeePerGas(maxFeePerGas.suggestedMaxFeePerGas);
-  };
+  useEffect(() => {
+    getProvider();
+  }, [provider]);
 
   useEffect(() => {
-    if (Number.isNaN(displayValue) || !(displayValue > 0)) {
-      console.log("Not a valid amount", displayValue);
-      return;
-    }
-
-    if (provider) {
+    if (providerFull) {
+      getSuggestedMaxFeePerGas();
+      getGasLimitEstimated();
       if (network.chainId === 1 || network.chainId === 137 || network.chainId === 11155111) {
-        getSuggestedMaxFeePerGas();
-        getGasLimitEstimated();
+        setMaxButton(true);
+
+        return;
       }
-      if (network.chainId === 10) {
+      if (network.chainId === 10 || network.chainId === 8453) {
         console.log("OP GAS ESTIMATE", totalGasOP);
         getEstimateTotalGasCostOptimism();
+        setMaxButton(true);
+        return;
       }
     }
-  }, [userValueToken, provider, displayValue, network]);
+    setMaxButton(false);
+  }, [providerFull, userValueToken, displayValue, max]);
 
-  // const handleMax = (setAmount, balance, dollarMode, price) => {
-  //   const gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
-  //   console.log("Gascost", gasCost);
-  //   console.log("Balance", props.balance._hex);
-  //   // setAmount(balance);
-
-  //   // setDisplayValue(calcDisplayValue(token, balance, dollarMode, price));
-  //   // setUserValue(0);
-  // };
-
-  // const balance = useBalance(props.provider, props.address, 1000);
-  // let floatBalance = parseFloat("0.00");
-  // let usingBalance = balance;
-
-  // if (usingBalance) {
-  //   if (props.gasPrice) {
-  //     // gasCost = (parseInt(props.gasPrice, 10) * 150000) / 10 ** 18;
-  //   }
-  //   if (value) {
-  //     gasCost = calculateGasCostTransaction(value, props.provider, props.toAddress);
-  //     console.log(gasCost);
-  //   }
-
-  //   const etherBalance = utils.formatEther(usingBalance);
-  //   parseFloat(etherBalance).toFixed(2);
-  //   floatBalance = parseFloat(etherBalance - gasCost);
-  //   if (floatBalance < 0) {
-  //     floatBalance = 0;
-  //   }
-  // }
-
-  // let displayBalance = floatBalance.toFixed(4);
-
-  // const price = props.price;
-
-  // function getBalance(_mode) {
-  //   setValue(floatBalance);
-  //   if (_mode === "USD") {
-  //     displayBalance = (floatBalance * price).toFixed(2);
-  //   } else {
-  //     displayBalance = floatBalance.toFixed(4);
-  //   }
-  //   return displayBalance;
-  // }
-
-  // useEffect(() => {
-  //   if (!currentValue && !displayMax) {
-  //     setDisplay("");
-  //   }
-  // }, [currentValue]);
+  useEffect(() => {
+    if (userValueToken !== undefined && userValueToken !== null) {
+      if (dollarMode) {
+        const newValue = formatDisplayValue(userValueToken * price, dollarMode);
+        setDisplayValue(newValue);
+      } else {
+        const newValue = formatDisplayValue(userValueToken, dollarMode);
+        setDisplayValue(newValue);
+      }
+    }
+  }, [dollarMode]);
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={async () => {
-          // console.log("suggestedMaxFeePerGas from click", suggestedMaxFeePerGas);
-          // console.log("gasLimit", gasLimit);
-          // console.log("provider", provider._network.chainId);
-          // console.log("amount", amount);
-          // console.log("totalGas", hexToString(totalGasOP));
-          console.log("ChainID", network.chainId);
-          // console.log(handleMax(setValue, props.balance, props.dollarMode, props.price));
-        }}
-      >
-        Click Me
-      </button>
-      <button
-        type="button"
-        onClick={async () => {
-          console.log("FROM BUTTON", suggestedMaxFeePerGas);
-        }}
-      >
-        Calc GasCost
-      </button>
-      {/* <span
-        style={{ cursor: "pointer", color: "red", float: "right", marginTop: "-5px" }}
-        onClick={() => {
-          setDisplay(getBalance(mode));
-          setDisplayMax(true);
-          if (typeof props.onChange === "function") {
-            props.onChange(floatBalance);
-          }
-        }}
-      >
-        max
-      </span> */}
+      {maxButton ? (
+        <button
+          type="button"
+          style={{
+            cursor: "pointer",
+            color: "red",
+            float: "right",
+            marginTop: "-5px",
+            border: "none",
+            backgroundColor: "transparent",
+            width: "50px",
+            height: "30px",
+          }}
+          onClick={() => {
+            handleMax(setAmount, balance, dollarMode, price);
+          }}
+        >
+          max
+        </button>
+      ) : (
+        <span
+          style={{
+            display: "inline-block",
+            float: "right",
+            marginTop: "-5px",
+            width: "50px",
+            height: "30px",
+          }}
+        />
+      )}
       <Input
         placeholder={"amount in " + (dollarMode ? "USD" : "ETH")}
-        // autoFocus={props.autoFocus}
         prefix={<Prefix dollarMode={dollarMode} />}
         value={displayValue}
         addonAfter={<AmountDollarSwitch nativeToken dollarMode={dollarMode} setDollarMode={setDollarMode} />}
         onChange={e => {
+          setSendWarning(" ");
           setDisplayValue(e.target.value);
           if (!dollarMode) {
             setUserValueToken(e.target.value);

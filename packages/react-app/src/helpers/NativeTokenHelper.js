@@ -1,4 +1,4 @@
-const { ethers, BigNumber, utils } = require("ethers");
+const { ethers, utils, BigNumber } = require("ethers");
 
 export const getNativeTokenBalance = async (provider, address) => {
   const balanceBigNumber = await provider.getBalance(address);
@@ -13,11 +13,9 @@ export const sendTokenTransaction = async ({
   suggestedMaxFeePerGas,
   tx,
 }) => {
-  let txConfig = {
+  const txConfig = {
     chainId: selectedChainId,
   };
-  console.log("tx", tx);
-  console.log("Amount from sendTokenTransaction", amount);
 
   if (!selectedErc20Token) {
     let value;
@@ -44,46 +42,37 @@ export const sendTokenTransaction = async ({
     };
   }
 
-  txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
-  console.log("suggestedMaxFeePerGas form Send Transaction", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
+  // txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
+  txConfig.gasPrice = gasPrice;
+  // console.log("suggestedMaxFeePerGas form Send Transaction", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
   console.log("gasPrice", gasPrice);
-  txConfig.gasLimit = ethers.utils.hexlify(55000);
-
-  // ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
+  txConfig.gasLimit = ethers.utils.hexlify(21000);
 
   // console.log("SEND AND NETWORK", targetNetwork);
 
   // console.log("FunctionTransactor", tx);
+
+  console.log("Value for tx in Amount", txConfig);
 
   let result = tx(txConfig);
   result = await result;
   console.log(result);
 };
 
-export const getGasLimit = async () => {
-  // const stringAmount = amount.toString();
+export const getGasLimit = async provider => {
   // const fixedAmount = parseFloat(stringAmount).toFixed(18);
-  // const tx = {
-  //   to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
-  //   // value: utils.parseEther(fixedAmount),
-  //   value: utils.parseEther("0.01"),
-  // };
-  // const estimatedGasLimit = await provider.estimateGas(tx);
-  const estimatedGasLimit = ethers.utils.hexlify(55000);
+  const tx = {
+    to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
+    // value: utils.parseEther(fixedAmount),
+    value: utils.parseEther("0.01"),
+  };
+  const estimatedGasLimit = await provider.estimateGas(tx);
   return estimatedGasLimit;
 };
-// export const hexToString = hex => {
-//   // Convert hex to BigNumber
-//   const bigNumberValue = ethers.BigNumber.from(hex);
-//   // Convert BigNumber to string
-//   const stringValue = bigNumberValue.toString();
-//   // Convert String to Ether Format
-//   const etherFormat = utils.formatEther(stringValue);
-//   return etherFormat;
-// };
 
 export const hexToEther = hex => {
   // Convert hex to BigNumber
+  console.log("HEX", hex);
   const bigNumberValue = ethers.BigNumber.from(hex);
   // Convert BigNumber to string
   const stringValue = bigNumberValue.toString();
@@ -116,11 +105,10 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
   return gasCost;
 };
 
-// export const calcAmount = (userValueNumber, dollarMode, price) => {
-//   console.log("in here", userValueNumber, dollarMode, price);
-//   if (!dollarMode) {
-//     return userValueNumber;
-//   }
+export const formatNumberWithDecimals = (number, decimalPlaces) => {
+  return Number(number).toFixed(decimalPlaces);
+};
 
-//   return userValueNumber * price;
-// };
+export const formatDisplayValue = (value, dollarMode) => {
+  return dollarMode ? formatNumberWithDecimals(value, 2) : formatNumberWithDecimals(value, 4);
+};

@@ -2,9 +2,10 @@ import axios from "axios";
 import { usePoller } from "eth-hooks";
 import { useEffect, useState } from "react";
 import { ethers, utils } from "ethers";
+// import { estimateTotalGasCost, estimateL1GasCost } from "@eth-optimism/sdk";
+import { estimateTotalGasCost } from "@eth-optimism/sdk";
 import { ETHERSCAN_KEY } from "../constants";
 import "dotenv/config";
-import { estimateTotalGasCost, estimateL1GasCost } from "@eth-optimism/sdk";
 import { calcGasCostInEther } from "../helpers/NativeTokenHelper";
 
 require("dotenv").config();
@@ -67,7 +68,7 @@ export const getGasPriceInfura = async (provider, speed) => {
   }
 };
 
-const tx = {
+const txL2 = {
   to: "0xD042799bADfc032db4860b7Ee0fc28371332eBc2",
   value: utils.parseEther("0.01"),
   data: "0x",
@@ -78,7 +79,7 @@ const tx = {
 
 /// https://sdk.optimism.io/
 export const estimateTotalGasCostOptimism = async provider => {
-  return estimateTotalGasCost(provider, tx);
+  return estimateTotalGasCost(provider, txL2);
 };
 
 const totalGasCost = async (_gasPrice, _gasLimit, _totalGasOP, _chainId) => {

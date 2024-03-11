@@ -925,7 +925,7 @@ function App(props) {
 
   const [priceERC20, setPriceERC20] = useState();
 
-  const [sendWarning, setSendWarning] = useState();
+  const [sendWarning, setSendWarning] = useState(" ");
 
   /// from Infura
   const [suggestedMaxFeePerGas, setSuggestedMaxFeePerGas] = useState();
@@ -1216,7 +1216,7 @@ function App(props) {
             />
           )}
         </div>
-        <div> {sendWarning} </div>
+        <div style={{ fontSize: "10px", color: "red", minHeight: "18px" }}> {sendWarning} </div>
 
         <div style={{ position: "relative", top: 10, left: 40 }}> {networkDisplay} </div>
 
@@ -1226,11 +1226,11 @@ function App(props) {
               key="submit"
               type="primary"
               disabled={
-                false
-                // loading ||
-                // !amount ||
-                // (!toAddress && !(isMoneriumTransferReady && isCrossChain(moneriumRadio))) ||
-                // (isValidIban(toAddress) && !isIbanAddressObjectValid(ibanAddressObject))
+                loading ||
+                !amount ||
+                parseFloat(amount) <= 0 ||
+                (!toAddress && !(isMoneriumTransferReady && isCrossChain(moneriumRadio))) ||
+                (isValidIban(toAddress) && !isIbanAddressObjectValid(ibanAddressObject))
               }
               loading={loading}
               onClick={async () => {
@@ -1258,11 +1258,12 @@ function App(props) {
                     networkName,
                     targetNetwork,
                     suggestedMaxFeePerGas,
+                    toAddress,
                   });
                 }
 
                 // setToAddress("")
-                setAmount("");
+                // setAmount("");
                 setData("");
 
                 setShowHistory(true);
