@@ -25,7 +25,9 @@ export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
           headers: { Authorization: `Basic ${Auth}` },
         });
         // console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
-        setGasPrice(data[speed]);
+        const gasPriceInHexInGwei = ethers.utils.hexlify(data[speed].suggestedMaxFeePerGas);
+        const gasPriceInHexInWei = ethers.utils.parseUnits(gasPriceInHexInGwei, "gwei");
+        setGasPrice(gasPriceInHexInWei);
       } catch (error) {
         console.log("Error fetching gas with infura:", error);
         try {
@@ -116,7 +118,7 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
   return gasCost;
 };
 
-// export default function useGasPrice(targetNetwork, speed, providerToAsk) {
+// export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
 //   const [gasPrice, setGasPrice] = useState();
 
 //   const loadGasPrice = async () => {
@@ -128,7 +130,7 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
 //     if (providerToAsk) {
 //       try {
 //         /// ethers.js gasEstimate here
-//         console.log("Ethers.js gas");
+
 //         const gasPriceResult = await providerToAsk.getGasPrice();
 //         if (gasPriceResult) setGasPrice(gasPriceResult);
 //       } catch (e) {
@@ -138,7 +140,7 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
 //       axios
 //         .get("https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" + ETHERSCAN_KEY)
 //         .then(response => {
-//           const newGasPrice = ethers.utils.parseUnits(response.data.result["ProposeGasPrice"], "gwei");
+//           const newGasPrice = ethers.utils.parseUnits(response.data.result.ProposeGasPrice, "gwei");
 //           if (newGasPrice !== gasPrice) {
 //             setGasPrice(newGasPrice);
 //           }
@@ -155,4 +157,4 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
 
 //   usePoller(loadGasPrice, 4200);
 //   return gasPrice;
-// }
+// };

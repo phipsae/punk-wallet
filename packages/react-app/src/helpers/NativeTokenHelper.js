@@ -44,7 +44,6 @@ export const sendTokenTransaction = async ({
   // txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
   txConfig.gasPrice = gasPrice;
   // console.log("suggestedMaxFeePerGas form Send Transaction", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
-  console.log("gasPrice", gasPrice);
   txConfig.gasLimit = ethers.utils.hexlify(21000);
 
   // console.log("SEND AND NETWORK", targetNetwork);
@@ -71,7 +70,6 @@ export const sendTokenTransaction = async ({
 
 export const hexToEther = hex => {
   // Convert hex to BigNumber
-  console.log("HEX", hex);
   const bigNumberValue = ethers.BigNumber.from(hex);
   // Convert BigNumber to string
   const stringValue = bigNumberValue.toString();
