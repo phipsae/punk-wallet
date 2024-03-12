@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import AmountDollarSwitch from "./AmountDollarSwitch";
 
 import { hexToEther, formatDisplayValue } from "../helpers/NativeTokenHelper";
-import { getGasPriceInfura, estimateTotalGasCostOptimism, getGasLimit, calcGasCostInEther } from "../hooks/GasPrice";
+import { getGasPriceInfura, estimateTotalGasCostOptimism, getGasLimit, totalGasCalc } from "../hooks/GasPrice";
 
 export default function EtherInput({
   setAmount,
@@ -12,7 +12,6 @@ export default function EtherInput({
   setDollarMode,
   provider,
   balance,
-  gasPrice,
   suggestedMaxFeePerGas,
   setSuggestedMaxFeePerGas,
   network,
@@ -65,24 +64,6 @@ export default function EtherInput({
     }
   };
 
-  const totalGasCalc = networkId => {
-    let totalGasCost;
-    if (gasLimit && suggestedMaxFeePerGas && (networkId === 1 || networkId === 137 || networkId === 11155111)) {
-      totalGasCost = calcGasCostInEther(gasLimit, suggestedMaxFeePerGas);
-      console.log("ETHEREUM totalGasCost", totalGasCost);
-    }
-    /// optimism, base
-    else if (totalGasOP && (networkId === 10 || networkId === 8453)) {
-      totalGasCost = hexToEther(totalGasOP);
-      console.log("OP totalGasCost", totalGasCost);
-    }
-    /// all the other networks w/o gasEstimate
-    else {
-      console.log("gas calculation not possible");
-    }
-    return totalGasCost;
-  };
-
   const calcAmount = (_sendAmount, _userBalance, _totalGasCost) => {
     console.log("IN HEREEEE", _userBalance, _totalGasCost);
     if (_sendAmount > _userBalance) {
@@ -116,7 +97,7 @@ export default function EtherInput({
     if (providerFull && balance) {
       console.log("In here?");
       const userBalance = hexToEther(balance);
-      const totalGasCost = totalGasCalc(network.chainId);
+      const totalGasCost = totalGasCalc(network.chainId, gasLimit, suggestedMaxFeePerGas, totalGasOP);
       console.log("Total Gas Cost", totalGasCost);
       console.log("userBalance", userBalance);
       calcAmount(userValueToken, userBalance, totalGasCost);

@@ -10,6 +10,7 @@ export const sendTokenTransaction = async ({
   amount,
   toAddress,
   gasPrice,
+  suggestedMaxFeePerGas,
   tx,
 }) => {
   const txConfig = {
@@ -40,9 +41,12 @@ export const sendTokenTransaction = async ({
       amount,
     };
   }
-
-  // txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
-  txConfig.gasPrice = gasPrice;
+  if (suggestedMaxFeePerGas) {
+    console.log("Using suggestedMaxFeePerGas for gasPrice");
+    txConfig.gasPrice = ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei");
+  } else {
+    txConfig.gasPrice = gasPrice;
+  }
   // console.log("suggestedMaxFeePerGas form Send Transaction", ethers.utils.parseUnits(suggestedMaxFeePerGas, "gwei"));
   txConfig.gasLimit = ethers.utils.hexlify(21000);
 

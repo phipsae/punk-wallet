@@ -20,24 +20,12 @@ export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
   const loadGasPrice = async () => {
     if (providerToAsk) {
       try {
-        const chainId = targetNetwork.chainId;
-        const { data } = await axios.get(`https://gas.api.infura.io/networks/${chainId}/suggestedGasFees`, {
-          headers: { Authorization: `Basic ${Auth}` },
-        });
-        // console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
-        const gasPriceInHexInGwei = ethers.utils.hexlify(data[speed].suggestedMaxFeePerGas);
-        const gasPriceInHexInWei = ethers.utils.parseUnits(gasPriceInHexInGwei, "gwei");
-        setGasPrice(gasPriceInHexInWei);
-      } catch (error) {
-        console.log("Error fetching gas with infura:", error);
-        try {
-          /// ethers.js gasEstimate here as fallback if Infura key not available
-          console.log("Ethers.js gas");
-          const gasPriceResult = await providerToAsk.getGasPrice();
-          if (gasPriceResult) setGasPrice(gasPriceResult);
-        } catch (e) {
-          console.log("error getting gas", e);
-        }
+        /// ethers.js gasEstimate here
+
+        const gasPriceResult = await providerToAsk.getGasPrice();
+        if (gasPriceResult) setGasPrice(gasPriceResult);
+      } catch (e) {
+        console.log("error getting gas", e);
       }
     } else {
       axios
@@ -50,7 +38,6 @@ export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
         })
         .catch(error => console.log(error));
     }
-    // }
   };
 
   useEffect(() => {
@@ -102,7 +89,7 @@ export const getGasLimit = async provider => {
   return estimatedGasLimit;
 };
 
-export const calcGasCostInEther = (gasLimit, gasPrice) => {
+const calcGasCostInEther = (gasLimit, gasPrice) => {
   // Convert hex to BigNumber
   const bigNumberValue = ethers.BigNumber.from(gasLimit);
   // Convert BigNumber to string
@@ -118,23 +105,51 @@ export const calcGasCostInEther = (gasLimit, gasPrice) => {
   return gasCost;
 };
 
+export const totalGasCalc = (_networkId, _gasLimit, _suggestedMaxFeePerGas, _totalGasOp) => {
+  let totalGasCost;
+  if (_gasLimit && _suggestedMaxFeePerGas && (_networkId === 1 || _networkId === 137 || _networkId === 11155111)) {
+    /// an additional 1% for the gas cost to make sure it not overshoots
+    totalGasCost = calcGasCostInEther(_gasLimit, _suggestedMaxFeePerGas) * 1.01;
+    console.log("ETHEREUM totalGasCost", totalGasCost);
+  }
+  /// optimism, base
+  else if (_totalGasOp && (_networkId === 10 || _networkId === 8453)) {
+    totalGasCost = hexToEther(_totalGasOp);
+    console.log("OP totalGasCost", totalGasCost);
+  }
+  /// all the other networks w/o gasEstimate
+  else {
+    console.log("gas calculation not possible");
+  }
+  return totalGasCost;
+};
+
 // export const useGasPrice = (targetNetwork, speed, providerToAsk) => {
 //   const [gasPrice, setGasPrice] = useState();
 
 //   const loadGasPrice = async () => {
-//     console.log(targetNetwork.gasPrice, "targetNetwork");
-//     // if (targetNetwork.gasPrice) {
-//     //   console.log("TargetNetwork Gasprice", targetNetwork.gasPrice);
-//     //   setGasPrice(targetNetwork.gasPrice);
-//     // } else {
 //     if (providerToAsk) {
 //       try {
-//         /// ethers.js gasEstimate here
-
-//         const gasPriceResult = await providerToAsk.getGasPrice();
-//         if (gasPriceResult) setGasPrice(gasPriceResult);
-//       } catch (e) {
-//         console.log("error getting gas", e);
+//         const chainId = targetNetwork.chainId;
+//         const { data } = await axios.get(`https://gas.api.infura.io/networks/${chainId}/suggestedGasFees`, {
+//           headers: { Authorization: `Basic ${Auth}` },
+//         });
+//         // console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
+//         console.log("from gasCalc with  Infura", data[speed].suggestedMaxFeePerGas);
+//         const gasPriceInHexInGwei = ethers.utils.hexlify(data[speed].suggestedMaxFeePerGas);
+//         const gasPriceInHexInWei = ethers.utils.parseUnits(gasPriceInHexInGwei, "gwei");
+//         setGasPrice(gasPriceInHexInWei);
+//         setGasPrice();
+//       } catch (error) {
+//         console.log("Error fetching gas with infura:", error);
+//         try {
+//           /// ethers.js gasEstimate here as fallback if Infura key not available
+//           console.log("Ethers.js gas");
+//           const gasPriceResult = await providerToAsk.getGasPrice();
+//           if (gasPriceResult) setGasPrice(gasPriceResult);
+//         } catch (e) {
+//           console.log("error getting gas", e);
+//         }
 //       }
 //     } else {
 //       axios

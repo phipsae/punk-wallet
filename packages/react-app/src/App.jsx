@@ -88,6 +88,7 @@ import {
 
 import { getChain } from "./helpers/ChainHelper";
 import { sendTokenTransaction } from "./helpers/NativeTokenHelper";
+import { TxSpeed } from "./components/Send/TxSpeed";
 
 const { confirm } = Modal;
 
@@ -462,6 +463,8 @@ function App(props) {
   const [wallectConnectConnectorSession, setWallectConnectConnectorSession] = useLocalStorage(
     "wallectConnectConnectorSession",
   );
+
+  const [txSpeed, setTxSpeed] = useState("medium");
 
   const [web3wallet, setWeb3wallet] = useState();
   // Wallet Connect V2 initialization and listeners
@@ -1286,10 +1289,14 @@ function App(props) {
                 <CaretUpOutlined />
               ) : (
                 <SendOutlined style={{ color: "#FFFFFF" }} />
-              )}{" "}
+              )}
               Send
             </Button>
           }
+        </div>
+        <div>
+          {" "}
+          <TxSpeed txSpeed={txSpeed} setTxSpeed={setTxSpeed} />
         </div>
       </div>
 
