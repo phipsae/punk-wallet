@@ -56,7 +56,7 @@ export const getGasPriceInfura = async (provider, speed) => {
     const { data } = await axios.get(`https://gas.api.infura.io/networks/${chainId}/suggestedGasFees`, {
       headers: { Authorization: `Basic ${Auth}` },
     });
-    console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
+    // console.log("Suggested gas fees from getGasPriceInfura function from GasPrice.js:", data);
     return data[speed];
   } catch (error) {
     console.log("Server responded with:", error);
@@ -89,18 +89,18 @@ export const getGasLimit = async provider => {
   return estimatedGasLimit;
 };
 
-const calcGasCostInEther = (gasLimit, gasPrice) => {
+export const calcGasCostInEther = (gasLimit, gasPrice) => {
   // Convert hex to BigNumber
   const bigNumberValue = ethers.BigNumber.from(gasLimit);
   // Convert BigNumber to string
   const txGasLimit = bigNumberValue.toString();
 
   const gasPriceInWei = ethers.utils.parseUnits(gasPrice, "gwei");
-  console.log(gasPriceInWei, "gasPriceInWei");
-  console.log(txGasLimit, "txGasLimit");
+  // console.log(gasPriceInWei, "gasPriceInWei");
+  // console.log(txGasLimit, "txGasLimit");
 
   const gasPriceInEther = hexToEther(gasPriceInWei);
-  console.log("GasCost in Ether", Number(gasPriceInEther) * Number(txGasLimit));
+  // console.log("GasCost in Ether", Number(gasPriceInEther) * Number(txGasLimit));
   const gasCost = Number(gasPriceInEther) * Number(txGasLimit);
   return gasCost;
 };
@@ -109,17 +109,17 @@ export const totalGasCalc = (_networkId, _gasLimit, _suggestedMaxFeePerGas, _tot
   let totalGasCost;
   if (_gasLimit && _suggestedMaxFeePerGas && (_networkId === 1 || _networkId === 137 || _networkId === 11155111)) {
     /// an additional 1% for the gas cost to make sure it not overshoots
-    totalGasCost = calcGasCostInEther(_gasLimit, _suggestedMaxFeePerGas) * 1.01;
-    console.log("ETHEREUM totalGasCost", totalGasCost);
+    totalGasCost = calcGasCostInEther(_gasLimit, _suggestedMaxFeePerGas) * 1.001;
+    // console.log("ETHEREUM totalGasCost", totalGasCost);
   }
   /// optimism, base
   else if (_totalGasOp && (_networkId === 10 || _networkId === 8453)) {
     totalGasCost = hexToEther(_totalGasOp);
-    console.log("OP totalGasCost", totalGasCost);
+    // console.log("OP totalGasCost", totalGasCost);
   }
   /// all the other networks w/o gasEstimate
   else {
-    console.log("gas calculation not possible");
+    console.log("gas calculation not possible", totalGasCost);
   }
   return totalGasCost;
 };

@@ -18,11 +18,13 @@ export default function EtherInput({
   setSendWarning,
   displayValue,
   setDisplayValue,
+  txSpeed,
+  gasLimit,
+  setGasLimit,
+  setShowTxDetailsButton,
 }) {
   /// userValue in token amount
   const [userValueToken, setUserValueToken] = useState();
-
-  const [gasLimit, setGasLimit] = useState();
   const [totalGasOP, setTotalGasOP] = useState();
   const [maxButton, setMaxButton] = useState(false);
   const [providerFull, setProviderFull] = useState();
@@ -38,8 +40,8 @@ export default function EtherInput({
     setGasLimit(limit);
   };
 
-  const getSuggestedMaxFeePerGas = async () => {
-    const maxFeePerGas = await getGasPriceInfura(provider, "high");
+  const getSuggestedMaxFeePerGas = async _txSpeed => {
+    const maxFeePerGas = await getGasPriceInfura(provider, _txSpeed);
     setSuggestedMaxFeePerGas(maxFeePerGas.suggestedMaxFeePerGas);
   };
 
@@ -65,21 +67,21 @@ export default function EtherInput({
   };
 
   const calcAmount = (_sendAmount, _userBalance, _totalGasCost) => {
-    console.log("IN HEREEEE", _userBalance, _totalGasCost);
     if (_sendAmount > _userBalance) {
-      console.log("CASE1");
       setSendWarning("⚠️ You don't have enough funds");
       setAmount(undefined);
     } else if (_totalGasCost > _userBalance) {
-      console.log("CASE2");
       setSendWarning("⚠️ Gas cost is higher than your balance");
       setAmount(undefined);
     } else if (Number(_sendAmount) + Number(_totalGasCost) > _userBalance) {
       setAmount(String(Number(_sendAmount) - Number(_totalGasCost)));
       setSendWarning("");
-    } else {
+    } else if (_totalGasCost !== undefined) {
       setAmount(_sendAmount);
       setSendWarning("");
+    } else {
+      setAmount(_sendAmount);
+      setSendWarning("⚠️ estimate of gas cost not available");
     }
   };
 
@@ -95,14 +97,13 @@ export default function EtherInput({
     }
 
     if (providerFull && balance) {
-      console.log("In here?");
       const userBalance = hexToEther(balance);
       const totalGasCost = totalGasCalc(network.chainId, gasLimit, suggestedMaxFeePerGas, totalGasOP);
-      console.log("Total Gas Cost", totalGasCost);
-      console.log("userBalance", userBalance);
+      // console.log("Total Gas Cost", totalGasCost);
+      // console.log("userBalance", userBalance);
       calcAmount(userValueToken, userBalance, totalGasCost);
     }
-  }, [displayValue, userValueToken, provider, max, suggestedMaxFeePerGas, totalGasOP]);
+  }, [displayValue, userValueToken, provider, max, suggestedMaxFeePerGas, totalGasOP, txSpeed]);
 
   useEffect(() => {
     if (userValueToken === 0 || userValueToken === undefined) {
@@ -122,22 +123,26 @@ export default function EtherInput({
 
   useEffect(() => {
     if (providerFull) {
-      getSuggestedMaxFeePerGas();
-      getGasLimitEstimated();
       if (network.chainId === 1 || network.chainId === 137 || network.chainId === 11155111) {
+        getSuggestedMaxFeePerGas(txSpeed);
+        getGasLimitEstimated();
+        setShowTxDetailsButton(true);
         setMaxButton(true);
-
         return;
       }
       if (network.chainId === 10 || network.chainId === 8453) {
-        console.log("OP GAS ESTIMATE", totalGasOP);
+        getSuggestedMaxFeePerGas(txSpeed);
+        getGasLimitEstimated();
         getEstimateTotalGasCostOptimism();
+        setShowTxDetailsButton(false);
         setMaxButton(true);
         return;
       }
     }
     setMaxButton(false);
-  }, [providerFull, userValueToken, displayValue, max]);
+    setSuggestedMaxFeePerGas(undefined);
+    setShowTxDetailsButton(false);
+  }, [providerFull, userValueToken, displayValue, max, txSpeed]);
 
   useEffect(() => {
     if (userValueToken !== undefined && userValueToken !== null) {
@@ -150,6 +155,8 @@ export default function EtherInput({
       }
     }
   }, [dollarMode]);
+
+  const nativeTokenName = network && network.nativeToken && network.nativeToken.name ? network.nativeToken.name : "ETH";
 
   return (
     <div>
@@ -176,7 +183,6 @@ export default function EtherInput({
         <span
           style={{
             display: "inline-block",
-            float: "right",
             marginTop: "-5px",
             width: "50px",
             height: "30px",
@@ -184,10 +190,17 @@ export default function EtherInput({
         />
       )}
       <Input
-        placeholder={"amount in " + (dollarMode ? "USD" : "ETH")}
+        placeholder={"amount in " + (dollarMode ? "USD" : nativeTokenName)}
         prefix={<Prefix dollarMode={dollarMode} />}
         value={displayValue}
-        addonAfter={<AmountDollarSwitch nativeToken dollarMode={dollarMode} setDollarMode={setDollarMode} />}
+        addonAfter={
+          <AmountDollarSwitch
+            nativeToken
+            dollarMode={dollarMode}
+            setDollarMode={setDollarMode}
+            nativeTokenName={nativeTokenName}
+          />
+        }
         onChange={e => {
           setSendWarning(" ");
           setDisplayValue(e.target.value);

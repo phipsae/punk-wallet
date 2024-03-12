@@ -2,14 +2,24 @@ import React from "react";
 import TokenDisplay from "./TokenDisplay";
 
 // toggle functionality for switching between ERC20 token and USD
-export default function AmountDollarSwitch({ token = null, dollarMode, setDollarMode, nativeToken = false }) {
+export default function AmountDollarSwitch({
+  token = null,
+  dollarMode,
+  setDollarMode,
+  nativeToken = false,
+  nativeTokenName,
+}) {
   return (
     <div
       onClick={() => {
         setDollarMode(!dollarMode);
       }}
     >
-      {!nativeToken ? <Switch dollarMode={dollarMode} token={token} /> : <SwitchNative dollarMode={dollarMode} />}
+      {!nativeToken ? (
+        <Switch dollarMode={dollarMode} token={token} />
+      ) : (
+        <SwitchNative dollarMode={dollarMode} nativeTokenName={nativeTokenName} />
+      )}
     </div>
   );
 }
@@ -24,13 +34,14 @@ const Switch = ({ dollarMode, token }) => {
   );
 };
 
-const SwitchNative = ({ dollarMode }) => {
+const SwitchNative = ({ dollarMode, nativeTokenName }) => {
   return dollarMode ? (
     <>💵 USD 🔀</>
   ) : (
     <>
-      {/* <TokenDisplay spanStyle={{ paddingLeft: "0.2em" }} optionalEnding="🔀" nativeToken /> */}
-      <span>Ξ ETH 🔀</span>
+      <span>
+        Ξ {nativeTokenName} {!nativeTokenName && "ETH"} 🔀
+      </span>
     </>
   );
 };
