@@ -4,13 +4,12 @@ import { formatEther, parseEther } from "@ethersproject/units";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Alert, Button, Checkbox, Col, Row, Select, Spin, Input, Modal, notification } from "antd";
 import "antd/dist/antd.css";
+import { useAppContext } from "./contexts/AppContext";
 import { useUserAddress } from "eth-hooks";
 import React, { useCallback, useEffect, useState, useMemo } from "react";
 import Web3Modal from "web3modal";
 import "./App.css";
 import {
-  Account,
-  Address,
   AddressInput,
   Balance,
   ERC20Balance,
@@ -29,7 +28,6 @@ import {
   SettingsModal,
   QRPunkBlockie,
   Ramp,
-  Reload,
   TokenDetailedDisplay,
   TokenDisplay,
   TokenImportDisplay,
@@ -113,38 +111,12 @@ const { OrderState } = require("@monerium/sdk");
 
 let scanner;
 
-/*
-  Web3 modal helps us "connect" external wallets:
-*/
-const web3Modal = new Web3Modal({
-  // network: "mainnet", // optional
-  cacheProvider: true, // optional
-  providerOptions: {
-    walletconnect: {
-      package: WalletConnectProvider, // required
-      options: {
-        infuraId: INFURA_ID,
-        rpc: {
-          10: "https://mainnet.optimism.io", // xDai
-          100: "https://rpc.gnosischain.com", // xDai
-          137: "https://polygon-rpc.com",
-          280: "https://zksync2-testnet.zksync.dev", // zksync alpha tesnet
-          31337: "http://localhost:8545",
-          42161: "https://arb1.arbitrum.io/rpc",
-          80001: "https://rpc-mumbai.maticvigil.com",
-          80216: "https://chain.buidlguidl.com:8545",
-        },
-      },
-    },
-  },
-});
-
 // 😬 Sorry for all the console logging
 const DEBUG = false;
 
 const networks = Object.values(NETWORKS);
 
-function MainWallet(props) {
+function MainWallet(web3Modal) {
   const [dollarMode, setDollarMode] = useLocalStorage("dollarMode", true);
 
   const [networkSettingsModalOpen, setNetworkSettingsModalOpen] = useState(false);
@@ -157,7 +129,19 @@ function MainWallet(props) {
     getNetworkWithSettings,
   );
 
+  /// for header and other Components
+  const { setNetworkSettingsHelperContext } = useAppContext();
+
+  useEffect(() => {
+    setNetworkSettingsHelperContext(networkSettingsHelper);
+  }, []);
+
   const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
+  /// for header and other Components
+  const { targetNetworkContext, setTargetNetworkContext } = useAppContext();
+  useEffect(() => {
+    setTargetNetworkContext(targetNetwork);
+  }, []);
 
   const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
   useEffect(() => {
@@ -168,8 +152,17 @@ function MainWallet(props) {
     );
   }, [targetNetwork]);
 
-  // 🔭 block explorer URL
-  const blockExplorer = targetNetwork.blockExplorer;
+  /// for header and other Components
+  const { setLocalProviderContext } = useAppContext();
+  useEffect(() => {
+    setLocalProviderContext(localProvider);
+  }, []);
+
+  /// 🔭 block explorer URL
+  const { blockExplorer, setBlockExplorer } = useAppContext();
+  useEffect(() => {
+    setBlockExplorer(targetNetwork.blockExplorer);
+  }, []);
 
   const networkName = targetNetwork.name;
   const erc20Tokens = targetNetwork?.erc20Tokens;
@@ -209,6 +202,12 @@ function MainWallet(props) {
 
   const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
 
+  /// for header
+  const { mainnetProviderContext, setMainnetProviderContext } = useAppContext();
+  useEffect(() => {
+    setMainnetProviderContext(mainnetProvider);
+  }, []);
+
   const [injectedProvider, setInjectedProvider] = useState();
 
   const logoutOfWeb3Modal = async () => {
@@ -223,12 +222,30 @@ function MainWallet(props) {
 
   /* 💵 This hook will get the price of ETH from 🦄 Uniswap: */
   const price = useExchangePrice(targetNetwork, mainnetProvider);
+  /// for header and other components
+  const { priceContext, setPriceContext } = useAppContext();
+  useEffect(() => {
+    setPriceContext(price);
+  }, []);
 
   /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
   const gasPrice = useGasPrice(targetNetwork, "fast", localProvider);
   // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
   const userProvider = useUserProvider(injectedProvider, localProvider);
+
+  /// for header and other components
+  const { userProviderContext, setUserProviderContext } = useAppContext();
+  useEffect(() => {
+    setUserProviderContext(userProvider);
+  }, []);
+
   const address = useUserAddress(userProvider);
+
+  /// for header
+  const { setUserAddress } = useAppContext();
+  useEffect(() => {
+    setUserAddress(address);
+  }, []);
 
   // You can warn the user if you would like them to be on a specific network
   // I think the naming is misleading a little bit
