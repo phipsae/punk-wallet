@@ -1,5 +1,5 @@
 // Create a context file, e.g., AppContext.js
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AppContext = createContext();
 
@@ -16,8 +16,15 @@ export const AppProvider = ({ children }) => {
   const [userProviderContext, setUserProviderContext] = useState();
   const [networkSettingsHelper, setNetworkSettingsHelper] = useState();
   const [networkSettingsHelperContext, setNetworkSettingsHelperContext] = useState();
-  const [targetNetworkContext, setTargetNetworkContext] = useState();
+  const [targetNetwork, setTargetNetwork] = useState();
   const [priceContext, setPriceContext] = useState();
+
+  useEffect(() => {
+    if (networkSettingsHelper) {
+      const selectedNetwork = networkSettingsHelper.getSelectedItem(true);
+      setTargetNetwork(selectedNetwork);
+    }
+  }, [networkSettingsHelper]);
 
   const value = {
     web3Modal,
@@ -36,8 +43,8 @@ export const AppProvider = ({ children }) => {
     setNetworkSettingsHelper,
     networkSettingsHelperContext,
     setNetworkSettingsHelperContext,
-    targetNetworkContext,
-    setTargetNetworkContext,
+    targetNetwork,
+    setTargetNetwork,
     priceContext,
     setPriceContext,
   };

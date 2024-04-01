@@ -136,12 +136,8 @@ function MainWallet(web3Modal) {
     setNetworkSettingsHelperContext(networkSettingsHelper);
   }, []);
 
-  const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
-  /// for header and other Components
-  const { targetNetworkContext, setTargetNetworkContext } = useAppContext();
-  useEffect(() => {
-    setTargetNetworkContext(targetNetwork);
-  }, []);
+  // const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
+  const { targetNetwork, setTargetNetwork } = useAppContext();
 
   const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
   useEffect(() => {
@@ -208,17 +204,7 @@ function MainWallet(web3Modal) {
     setMainnetProviderContext(mainnetProvider);
   }, []);
 
-  const [injectedProvider, setInjectedProvider] = useState();
-
-  const logoutOfWeb3Modal = async () => {
-    await web3Modal.clearCachedProvider();
-    if (injectedProvider && injectedProvider.provider && injectedProvider.provider.disconnect) {
-      await injectedProvider.provider.disconnect();
-    }
-    setTimeout(() => {
-      window.location.reload();
-    }, 1);
-  };
+  const { injectedProvider, setInjectedProvider } = useAppContext();
 
   /* 💵 This hook will get the price of ETH from 🦄 Uniswap: */
   const price = useExchangePrice(targetNetwork, mainnetProvider);
@@ -789,21 +775,6 @@ function MainWallet(web3Modal) {
     );
   }
 
-  const loadWeb3Modal = useCallback(async () => {
-    const provider = await web3Modal.connect();
-    provider.on("disconnect", () => {
-      console.log("LOGOUT!");
-      logoutOfWeb3Modal();
-    });
-    setInjectedProvider(new Web3Provider(provider));
-  }, [setInjectedProvider]);
-
-  useEffect(() => {
-    if (web3Modal.cachedProvider) {
-      loadWeb3Modal();
-    }
-  }, [loadWeb3Modal]);
-
   let faucetHint = "";
   const faucetAvailable = localProvider && localProvider.connection && networkName == "localhost";
 
@@ -1023,8 +994,6 @@ function MainWallet(web3Modal) {
             setTargetNetwork,
             price,
             web3Modal,
-            loadWeb3Modal,
-            logoutOfWeb3Modal,
             walletDisplay,
           }}
         />

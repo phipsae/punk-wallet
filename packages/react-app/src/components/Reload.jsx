@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { ReloadOutlined } from "@ant-design/icons";
 
 import { ethers } from "ethers";
-import { JsonRpcProvider} from "@ethersproject/providers";
+import { JsonRpcProvider } from "@ethersproject/providers";
 import { formatEther } from "@ethersproject/units";
 
 import { NETWORKS } from "../constants";
@@ -22,7 +22,14 @@ export default function Reload({ currentPunkAddress, localProvider, networkSetti
         verticalAlign: "middle",
       }}
       onClick={() => {
-        checkBalances(currentPunkAddress, checkingBalances, setCheckingBalances, localProvider, networkSettingsHelper, setTargetNetwork);
+        checkBalances(
+          currentPunkAddress,
+          checkingBalances,
+          setCheckingBalances,
+          localProvider,
+          networkSettingsHelper,
+          setTargetNetwork,
+        );
       }}
     >
       <ReloadOutlined />
@@ -33,7 +40,14 @@ export default function Reload({ currentPunkAddress, localProvider, networkSetti
 // ToDo: It could be nice to run this automatically when someone first visits the page, so we would switch to the network with some balance
 
 // a function to check your balance on every network and switch networks if found...
-const checkBalances = async (address, checkingBalances, setCheckingBalances, localProvider, networkSettingsHelper, setTargetNetwork) => {
+const checkBalances = async (
+  address,
+  checkingBalances,
+  setCheckingBalances,
+  localProvider,
+  networkSettingsHelper,
+  setTargetNetwork,
+) => {
   if (!checkingBalances) {
     setCheckingBalances(true);
     setTimeout(() => {
