@@ -4,36 +4,23 @@ import React, { useEffect, useState } from "react";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { useAppContext } from "./contexts/AppContext";
-import { INFURA_ID, NETWORK, NETWORKS } from "./constants";
+import { INFURA_ID, NETWORKS } from "./constants";
 import WalletPage from "./pages/WalletPage";
 import SwapPage from "./pages/SwapPage";
 import Header from "./components/Header";
 import { useUserAddress } from "eth-hooks";
-import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
-import {
-  NETWORK_SETTINGS_STORAGE_KEY,
-  migrateSelectedNetworkStorageSetting,
-  getNetworkWithSettings,
-} from "./helpers/NetworkSettingsHelper";
+import { NETWORK_SETTINGS_STORAGE_KEY, getNetworkWithSettings } from "./helpers/NetworkSettingsHelper";
 
 import { SettingsHelper } from "./helpers/SettingsHelper";
 
-import { useBalance, useExchangePrice, useGasPrice, useLocalStorage, usePoller, useUserProvider } from "./hooks";
+import { useLocalStorage, useUserProvider } from "./hooks";
 
 function App({ subgraphUri }) {
   const networks = Object.values(NETWORKS);
 
-  const {
-    setWeb3Modal,
-    userAddress,
-    blockExplorer,
-    mainnetProviderContext,
-    localProviderContext,
-    userProviderContext,
-    priceContext,
-    injectedProvider,
-  } = useAppContext();
+  const { setWeb3Modal, blockExplorer, priceContext, injectedProvider } = useAppContext();
 
   const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
   const networkSettingsHelper = new SettingsHelper(
@@ -55,7 +42,9 @@ function App({ subgraphUri }) {
     );
   }, [targetNetwork]);
 
+  // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
   const userProvider = useUserProvider(injectedProvider, localProvider);
+
   const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
 
   const address = useUserAddress(userProvider);
@@ -96,7 +85,7 @@ function App({ subgraphUri }) {
         <Header
           extraProps={{
             address,
-            mainnetProviderContext,
+            mainnetProvider,
             blockExplorer,
             localProvider,
             userProvider,
@@ -114,7 +103,6 @@ function App({ subgraphUri }) {
           render={() => (
             <WalletPage
               subgraphUri={subgraphUri}
-              web3Modal={web3ModalInstance}
               targetNetwork={targetNetwork}
               setTargetNetwork={setTargetNetwork}
               networkSettingsHelper={networkSettingsHelper}

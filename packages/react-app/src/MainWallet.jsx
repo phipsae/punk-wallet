@@ -1,13 +1,10 @@
-import { CaretUpOutlined, ScanOutlined, SendOutlined, HistoryOutlined } from "@ant-design/icons";
-import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+import { CaretUpOutlined, ScanOutlined, SendOutlined } from "@ant-design/icons";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
 import { formatEther, parseEther } from "@ethersproject/units";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-import { Alert, Button, Checkbox, Col, Row, Select, Spin, Input, Modal, notification } from "antd";
+import { Alert, Button, Col, Row, Spin, Input, Modal } from "antd";
 import "antd/dist/antd.css";
 import { useAppContext } from "./contexts/AppContext";
-import { useUserAddress } from "eth-hooks";
-import React, { useCallback, useEffect, useState, useMemo } from "react";
-import Web3Modal from "web3modal";
+import React, { useEffect, useState, useMemo } from "react";
 import "./App.css";
 import {
   AddressInput,
@@ -18,7 +15,6 @@ import {
   EtherInput,
   Faucet,
   GasGauge,
-  Header,
   IFrame,
   Monerium,
   MoneriumCrossChainAddressSelector,
@@ -32,13 +28,12 @@ import {
   TokenDisplay,
   TokenImportDisplay,
   TransactionResponses,
-  Wallet,
   WalletConnectTransactionPopUp,
   WalletConnectV2ConnectionError,
 } from "./components";
-import { INFURA_ID, NETWORK, NETWORKS } from "./constants";
+import { NETWORK, NETWORKS } from "./constants";
 import { Transactor } from "./helpers";
-import { useBalance, useExchangePrice, useGasPrice, useLocalStorage, usePoller, useUserProvider } from "./hooks";
+import { useBalance, useExchangePrice, useGasPrice, useLocalStorage } from "./hooks";
 
 import WalletConnect from "@walletconnect/client";
 
@@ -55,10 +50,8 @@ import {
   ON_CHAIN_IBAN_VALUE,
   getAvailableTargetChainNames,
   isCrossChain,
-  getMemo,
   getNewMoneriumClient,
   getFilteredOrders,
-  getShortAddress,
   isValidIban,
   placeCrossChainOrder,
   placeIbanOrder,
@@ -69,11 +62,7 @@ import { SettingsHelper } from "./helpers/SettingsHelper";
 
 import { monitorBalance } from "./helpers/ERC20Helper";
 
-import {
-  NETWORK_SETTINGS_STORAGE_KEY,
-  migrateSelectedNetworkStorageSetting,
-  getNetworkWithSettings,
-} from "./helpers/NetworkSettingsHelper";
+import { migrateSelectedNetworkStorageSetting } from "./helpers/NetworkSettingsHelper";
 
 import {
   TOKEN_SETTINGS_STORAGE_KEY,
@@ -81,8 +70,6 @@ import {
   getTokens,
   migrateSelectedTokenStorageSetting,
 } from "./helpers/TokenSettingsHelper";
-
-import { getChain } from "./helpers/ChainHelper";
 
 const { confirm } = Modal;
 
@@ -112,12 +99,9 @@ const { OrderState } = require("@monerium/sdk");
 let scanner;
 
 // 😬 Sorry for all the console logging
-const DEBUG = false;
-
-const networks = Object.values(NETWORKS);
+// const DEBUG = false;
 
 function MainWallet({
-  web3Modal,
   targetNetwork,
   setTargetNetwork,
   networkSettingsHelper,
@@ -130,19 +114,7 @@ function MainWallet({
   const [dollarMode, setDollarMode] = useLocalStorage("dollarMode", true);
 
   const [networkSettingsModalOpen, setNetworkSettingsModalOpen] = useState(false);
-  // const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
-  // const networkSettingsHelper = new SettingsHelper(
-  //   NETWORK_SETTINGS_STORAGE_KEY,
-  //   networks,
-  //   networkSettings,
-  //   setNetworkSettings,
-  //   getNetworkWithSettings,
-  // );
 
-  // const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
-  // const { targetNetwork, setTargetNetwork } = useAppContext();
-
-  // const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
   useEffect(() => {
     setLocalProvider(prevProvider =>
       localProvider?.connection?.url == targetNetwork.rpcUrl
@@ -151,13 +123,7 @@ function MainWallet({
     );
   }, [targetNetwork]);
 
-  /// for header and other Components
-  const { setLocalProviderContext } = useAppContext();
-  useEffect(() => {
-    setLocalProviderContext(localProvider);
-  }, []);
-
-  /// 🔭 block explorer URL
+  /// 🔭 block explorer URL - for header in AppContext
   const { blockExplorer, setBlockExplorer } = useAppContext();
   useEffect(() => {
     setBlockExplorer(targetNetwork.blockExplorer);
@@ -199,15 +165,7 @@ function MainWallet({
     }
   }
 
-  // const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
-
-  /// for header
-  const { mainnetProviderContext, setMainnetProviderContext } = useAppContext();
-  useEffect(() => {
-    setMainnetProviderContext(mainnetProvider);
-  }, []);
-
-  const { injectedProvider, setInjectedProvider } = useAppContext();
+  const { injectedProvider } = useAppContext();
 
   /* 💵 This hook will get the price of ETH from 🦄 Uniswap: */
   const price = useExchangePrice(targetNetwork, mainnetProvider);
@@ -219,22 +177,6 @@ function MainWallet({
 
   /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
   const gasPrice = useGasPrice(targetNetwork, "fast", localProvider);
-  // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
-  // const userProvider = useUserProvider(injectedProvider, localProvider);
-
-  /// for header and other components
-  const { userProviderContext, setUserProviderContext } = useAppContext();
-  useEffect(() => {
-    setUserProviderContext(userProvider);
-  }, []);
-
-  // const address = useUserAddress(userProvider);
-
-  /// for header
-  const { setUserAddress } = useAppContext();
-  useEffect(() => {
-    setUserAddress(address);
-  }, []);
 
   // You can warn the user if you would like them to be on a specific network
   // I think the naming is misleading a little bit
@@ -254,7 +196,7 @@ function MainWallet({
   // 🏗 scaffold-eth is full of handy hooks like this one to get your balance:
   const yourLocalBalance = useBalance(localProvider, address);
 
-  const balance = yourLocalBalance && formatEther(yourLocalBalance);
+  // const balance = yourLocalBalance && formatEther(yourLocalBalance);
 
   const [showHistory, setShowHistory] = useLocalStorage("showHistory", true);
 
@@ -665,7 +607,7 @@ function MainWallet({
   }, [injectedProvider, localProvider, address]);
 
   // Just plug in different 🛰 providers to get your balance on different chains:
-  const yourMainnetBalance = useBalance(mainnetProvider, address);
+  // const yourMainnetBalance = useBalance(mainnetProvider, address);
 
   //
   // 🧫 DEBUG 👨🏻‍🔬
@@ -914,13 +856,6 @@ function MainWallet({
 
   const [priceERC20, setPriceERC20] = useState();
 
-  const walletDisplay =
-    web3Modal && web3Modal.cachedProvider ? (
-      ""
-    ) : (
-      <Wallet key="wallet" address={address} provider={userProvider} ensProvider={mainnetProvider} price={price} />
-    );
-
   return (
     <div className="App">
       {networkSettingsHelper && (
@@ -984,25 +919,6 @@ function MainWallet({
           network={targetNetwork}
         />
       )}
-
-      {/* <div className="site-page-header-ghost-wrapper">
-        <Header
-          extraProps={{
-            address,
-            mainnetProvider,
-            blockExplorer,
-            localProvider,
-            userProvider,
-            networkSettingsHelper,
-            setTargetNetwork,
-            price,
-            web3Modal,
-            // walletDisplay,
-          }}
-        />
-      </div> */}
-
-      {/* ✏️ Edit the header and change the title to your project name */}
 
       <div
         style={{ clear: "both", opacity: yourLocalBalance ? 1 : 0.2, width: 500, margin: "auto", position: "relative" }}

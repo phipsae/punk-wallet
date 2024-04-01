@@ -64,7 +64,7 @@ export default function Header({ extraProps }) {
     <Link key="nav1" to="/" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
       🪪 Wallet
     </Link>,
-    <Link to="/swap" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
+    <Link key="nav2" to="/swap" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
       🔁 Swap
     </Link>,
     <a
