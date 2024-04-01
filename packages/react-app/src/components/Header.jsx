@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Address from "./Address";
 import Reload from "./Reload";
 import Account from "./Account";
+import Wallet from "./Wallet";
 
 export default function Header({ extraProps }) {
   const {
@@ -19,10 +20,16 @@ export default function Header({ extraProps }) {
     web3Modal,
     loadWeb3Modal,
     logoutOfWeb3Modal,
-    walletDisplay,
   } = extraProps || {};
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 850);
+
+  const walletDisplay =
+    web3Modal && web3Modal.cachedProvider ? (
+      ""
+    ) : (
+      <Wallet key="wallet" address={address} provider={userProvider} ensProvider={mainnetProvider} price={price} />
+    );
 
   const dropdownMenu = (
     <Menu>

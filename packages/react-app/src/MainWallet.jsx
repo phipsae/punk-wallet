@@ -116,30 +116,33 @@ const DEBUG = false;
 
 const networks = Object.values(NETWORKS);
 
-function MainWallet(web3Modal) {
+function MainWallet({
+  web3Modal,
+  targetNetwork,
+  setTargetNetwork,
+  networkSettingsHelper,
+  localProvider,
+  setLocalProvider,
+  userProvider,
+  address,
+  mainnetProvider,
+}) {
   const [dollarMode, setDollarMode] = useLocalStorage("dollarMode", true);
 
   const [networkSettingsModalOpen, setNetworkSettingsModalOpen] = useState(false);
-  const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
-  const networkSettingsHelper = new SettingsHelper(
-    NETWORK_SETTINGS_STORAGE_KEY,
-    networks,
-    networkSettings,
-    setNetworkSettings,
-    getNetworkWithSettings,
-  );
-
-  /// for header and other Components
-  const { setNetworkSettingsHelperContext } = useAppContext();
-
-  useEffect(() => {
-    setNetworkSettingsHelperContext(networkSettingsHelper);
-  }, []);
+  // const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
+  // const networkSettingsHelper = new SettingsHelper(
+  //   NETWORK_SETTINGS_STORAGE_KEY,
+  //   networks,
+  //   networkSettings,
+  //   setNetworkSettings,
+  //   getNetworkWithSettings,
+  // );
 
   // const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
-  const { targetNetwork, setTargetNetwork } = useAppContext();
+  // const { targetNetwork, setTargetNetwork } = useAppContext();
 
-  const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
+  // const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
   useEffect(() => {
     setLocalProvider(prevProvider =>
       localProvider?.connection?.url == targetNetwork.rpcUrl
@@ -196,7 +199,7 @@ function MainWallet(web3Modal) {
     }
   }
 
-  const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
+  // const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
 
   /// for header
   const { mainnetProviderContext, setMainnetProviderContext } = useAppContext();
@@ -217,7 +220,7 @@ function MainWallet(web3Modal) {
   /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
   const gasPrice = useGasPrice(targetNetwork, "fast", localProvider);
   // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
-  const userProvider = useUserProvider(injectedProvider, localProvider);
+  // const userProvider = useUserProvider(injectedProvider, localProvider);
 
   /// for header and other components
   const { userProviderContext, setUserProviderContext } = useAppContext();
@@ -225,7 +228,7 @@ function MainWallet(web3Modal) {
     setUserProviderContext(userProvider);
   }, []);
 
-  const address = useUserAddress(userProvider);
+  // const address = useUserAddress(userProvider);
 
   /// for header
   const { setUserAddress } = useAppContext();
@@ -982,7 +985,7 @@ function MainWallet(web3Modal) {
         />
       )}
 
-      <div className="site-page-header-ghost-wrapper">
+      {/* <div className="site-page-header-ghost-wrapper">
         <Header
           extraProps={{
             address,
@@ -994,10 +997,10 @@ function MainWallet(web3Modal) {
             setTargetNetwork,
             price,
             web3Modal,
-            walletDisplay,
+            // walletDisplay,
           }}
         />
-      </div>
+      </div> */}
 
       {/* ✏️ Edit the header and change the title to your project name */}
 

@@ -77,7 +77,7 @@ export default function Account({
   }, [setInjectedProvider]);
 
   useEffect(() => {
-    if (web3Modal.cachedProvider) {
+    if (web3Modal && web3Modal.cachedProvider) {
       loadWeb3Modal();
     }
   }, [loadWeb3Modal]);

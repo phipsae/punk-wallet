@@ -1,14 +1,65 @@
 // Import necessary parts from react-router-dom
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { useAppContext } from "./contexts/AppContext";
-import { INFURA_ID } from "./constants";
+import { INFURA_ID, NETWORK, NETWORKS } from "./constants";
 import WalletPage from "./pages/WalletPage";
 import SwapPage from "./pages/SwapPage";
+import Header from "./components/Header";
+import { useUserAddress } from "eth-hooks";
+import { StaticJsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+
+import {
+  NETWORK_SETTINGS_STORAGE_KEY,
+  migrateSelectedNetworkStorageSetting,
+  getNetworkWithSettings,
+} from "./helpers/NetworkSettingsHelper";
+
+import { SettingsHelper } from "./helpers/SettingsHelper";
+
+import { useBalance, useExchangePrice, useGasPrice, useLocalStorage, usePoller, useUserProvider } from "./hooks";
 
 function App({ subgraphUri }) {
+  const networks = Object.values(NETWORKS);
+
+  const {
+    setWeb3Modal,
+    userAddress,
+    blockExplorer,
+    mainnetProviderContext,
+    localProviderContext,
+    userProviderContext,
+    priceContext,
+    injectedProvider,
+  } = useAppContext();
+
+  const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
+  const networkSettingsHelper = new SettingsHelper(
+    NETWORK_SETTINGS_STORAGE_KEY,
+    networks,
+    networkSettings,
+    setNetworkSettings,
+    getNetworkWithSettings,
+  );
+
+  const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
+
+  const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
+  useEffect(() => {
+    setLocalProvider(prevProvider =>
+      localProvider?.connection?.url == targetNetwork.rpcUrl
+        ? prevProvider
+        : new StaticJsonRpcProvider(targetNetwork.rpcUrl),
+    );
+  }, [targetNetwork]);
+
+  const userProvider = useUserProvider(injectedProvider, localProvider);
+  const mainnetProvider = new StaticJsonRpcProvider(NETWORKS.ethereum.rpcUrl);
+
+  const address = useUserAddress(userProvider);
+
   /*
   Web3 modal helps us "connect" external wallets:
 */
@@ -35,18 +86,47 @@ function App({ subgraphUri }) {
     },
   });
 
-  const { setWeb3Modal } = useAppContext();
-
   useEffect(() => {
     setWeb3Modal(web3ModalInstance);
   }, []);
 
   return (
     <Router>
+      <div className="site-page-header-ghost-wrapper">
+        <Header
+          extraProps={{
+            address,
+            mainnetProviderContext,
+            blockExplorer,
+            localProvider,
+            userProvider,
+            networkSettingsHelper,
+            setTargetNetwork,
+            priceContext,
+            web3ModalInstance,
+          }}
+        />
+      </div>
       <Switch>
-        <Route exact path="/" render={() => <WalletPage subgraphUri={subgraphUri} web3Modal={web3ModalInstance} />} />
-        <Route path="/swap" component={SwapPage} />
-        {/* Define other routes as needed */}
+        <Route
+          exact
+          path="/"
+          render={() => (
+            <WalletPage
+              subgraphUri={subgraphUri}
+              web3Modal={web3ModalInstance}
+              targetNetwork={targetNetwork}
+              setTargetNetwork={setTargetNetwork}
+              networkSettingsHelper={networkSettingsHelper}
+              setLocalProvider={setLocalProvider}
+              localProvider={localProvider}
+              userProvider={userProvider}
+              address={address}
+              mainnetProvider={mainnetProvider}
+            />
+          )}
+        />
+        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} web3Modal={web3ModalInstance} />} />
       </Switch>
     </Router>
   );

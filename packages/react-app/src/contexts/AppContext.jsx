@@ -14,17 +14,8 @@ export const AppProvider = ({ children }) => {
   const [blockExplorer, setBlockExplorer] = useState();
   const [localProviderContext, setLocalProviderContext] = useState();
   const [userProviderContext, setUserProviderContext] = useState();
-  const [networkSettingsHelper, setNetworkSettingsHelper] = useState();
-  const [networkSettingsHelperContext, setNetworkSettingsHelperContext] = useState();
-  const [targetNetwork, setTargetNetwork] = useState();
   const [priceContext, setPriceContext] = useState();
-
-  useEffect(() => {
-    if (networkSettingsHelper) {
-      const selectedNetwork = networkSettingsHelper.getSelectedItem(true);
-      setTargetNetwork(selectedNetwork);
-    }
-  }, [networkSettingsHelper]);
+  const [injectedProvider, setInjectedProvider] = useState();
 
   const value = {
     web3Modal,
@@ -39,14 +30,10 @@ export const AppProvider = ({ children }) => {
     setLocalProviderContext,
     userProviderContext,
     setUserProviderContext,
-    networkSettingsHelper,
-    setNetworkSettingsHelper,
-    networkSettingsHelperContext,
-    setNetworkSettingsHelperContext,
-    targetNetwork,
-    setTargetNetwork,
     priceContext,
     setPriceContext,
+    injectedProvider,
+    setInjectedProvider,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
