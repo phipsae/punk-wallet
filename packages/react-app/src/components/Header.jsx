@@ -33,12 +33,12 @@ export default function Header({ extraProps }) {
 
   const dropdownMenu = (
     <Menu>
-      {/* <Menu.Item key="1">
+      <Menu.Item key="1">
         <Link to="/">🪪 Wallet</Link>
       </Menu.Item>
       <Menu.Item key="2">
         <Link to="/swap">🔁 Swap</Link>
-      </Menu.Item> */}
+      </Menu.Item>
       <Menu.Item key="3">
         <a href="https://github.com/scaffold-eth/punk-wallet" target="_blank" rel="noopener noreferrer">
           ℹ️ Docs
@@ -61,12 +61,12 @@ export default function Header({ extraProps }) {
   );
 
   const navigationButtons = [
-    // <Link key="nav1" to="/" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
-    //   🪪 Wallet
-    // </Link>,
-    // <Link key="nav2" to="/swap" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
-    //   🔁 Swap
-    // </Link>,
+    <Link key="nav1" to="/" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
+      🪪 Wallet
+    </Link>,
+    <Link key="nav2" to="/swap" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
+      🔁 Swap
+    </Link>,
     <a
       key="nav3"
       href="https://github.com/scaffold-eth/punk-wallet"

@@ -114,7 +114,7 @@ function App({ subgraphUri }) {
             />
           )}
         />
-        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} web3Modal={web3ModalInstance} />} />
+        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} userProvider={userProvider} />} />
       </Switch>
     </Router>
   );
