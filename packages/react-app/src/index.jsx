@@ -1,7 +1,9 @@
+import { BrowserRouter as Router } from "react-router-dom";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import React from "react";
 import { ThemeSwitcherProvider } from "react-css-theme-switcher";
 import ReactDOM from "react-dom";
+import { AppProvider } from "./contexts/AppContext";
 import App from "./App";
 import "./index.css";
 import { SafeInjectProvider } from "./contexts/SafeInjectContext";
@@ -24,7 +26,11 @@ ReactDOM.render(
   <ApolloProvider client={client}>
     <ThemeSwitcherProvider themeMap={themes} defaultTheme={prevTheme || "light"}>
       <SafeInjectProvider>
-        <App subgraphUri={subgraphUri} />
+        <AppProvider>
+          <Router>
+            <App subgraphUri={subgraphUri} />
+          </Router>
+        </AppProvider>
       </SafeInjectProvider>
     </ThemeSwitcherProvider>
   </ApolloProvider>,

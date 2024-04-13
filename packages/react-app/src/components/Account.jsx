@@ -1,10 +1,11 @@
+import { Web3Provider } from "@ethersproject/providers";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
-import { Tooltip } from "antd";
-import React from "react";
-import { useThemeSwitcher } from "react-css-theme-switcher";
-import Address from "./Address";
-import Balance from "./Balance";
-import Wallet from "./Wallet";
+import React, { useCallback, useEffect } from "react";
+// import { useThemeSwitcher } from "react-css-theme-switcher";
+// import Address from "./Address";
+// import Balance from "./Balance";
+// import Wallet from "./Wallet";
+import { useAppContext } from "../contexts/AppContext";
 
 /*
   ~ What it does? ~
@@ -38,62 +39,90 @@ import Wallet from "./Wallet";
               to be able to log in/log out to/from existing accounts
   - Provide blockExplorer={blockExplorer}, click on address and get the link
               (ex. by default "https://etherscan.io/" or for xdai "https://blockscout.com/poa/xdai/")
+         
 */
 
 export default function Account({
-  address,
-  userProvider,
-  localProvider,
-  mainnetProvider,
-  price,
-  minimized,
+  // address,
+  // userProvider,
+  // localProvider,
+  // mainnetProvider,
+  // price,
+  // minimized,
   web3Modal,
-  loadWeb3Modal,
-  logoutOfWeb3Modal,
-  blockExplorer,
+  // logoutOfWeb3Modal,
+  // blockExplorer,
 }) {
   const modalButtons = [];
+
+  const { injectedProvider, setInjectedProvider } = useAppContext();
+
+  const logoutOfWeb3Modal = async () => {
+    await web3Modal.clearCachedProvider();
+    if (injectedProvider && injectedProvider.provider && injectedProvider.provider.disconnect) {
+      await injectedProvider.provider.disconnect();
+    }
+    setTimeout(() => {
+      window.location.reload();
+    }, 1);
+  };
+
+  const loadWeb3Modal = useCallback(async () => {
+    const provider = await web3Modal.connect();
+    provider.on("disconnect", () => {
+      console.log("LOGOUT!");
+      logoutOfWeb3Modal();
+    });
+    setInjectedProvider(new Web3Provider(provider));
+  }, [setInjectedProvider]);
+
+  useEffect(() => {
+    if (web3Modal && web3Modal.cachedProvider) {
+      loadWeb3Modal();
+    }
+  }, [loadWeb3Modal]);
+
   if (web3Modal) {
     if (web3Modal.cachedProvider) {
       modalButtons.push(
         <span key="logoutbutton" style={{ verticalAlign: "middle", paddingLeft: 16, fontSize: 32 }}>
-          {/*<Tooltip title="Disconnect Wallet">*/}
-            <LogoutOutlined onClick={logoutOfWeb3Modal} style={{ color: "#1890ff" }} />
-          {/*</Tooltip>*/}
+          {/* <Tooltip title="Disconnect Wallet"> */}
+          <LogoutOutlined onClick={logoutOfWeb3Modal} style={{ color: "#1890ff" }} />
+          {/* </Tooltip> */}
         </span>,
       );
     } else {
       modalButtons.push(
         <span key="loginbutton" style={{ verticalAlign: "middle", paddingLeft: 16, fontSize: 32 }}>
-          {/*<Tooltip title="Connect Wallet">*/}
-            <LoginOutlined  onClick={loadWeb3Modal} style={{ color: "#1890ff" }} />
-          {/*</Tooltip>*/}
+          {/* <Tooltip title="Connect Wallet"> */}
+          <LoginOutlined onClick={loadWeb3Modal} style={{ color: "#1890ff" }} />
+          {/* </Tooltip> */}
         </span>,
       );
     }
   }
 
-  const { currentTheme } = useThemeSwitcher();
+  // const { currentTheme } = useThemeSwitcher();
 
-  const display = minimized ? (
-    ""
-  ) : (
-    <span>
-      {address ? (
-        <Address address={address} ensProvider={mainnetProvider} blockExplorer={blockExplorer} />
-      ) : (
-        "Connecting..."
-      )}
-      <Balance address={address} provider={localProvider} price={price} />
-      <Wallet
-        address={address}
-        provider={userProvider}
-        ensProvider={mainnetProvider}
-        price={price}
-        color={currentTheme == "light" ? "#1890ff" : "#2caad9"}
-      />
-    </span>
-  );
+  // const display = minimized ? (
+  //   ""
+  // ) : (
+  //   <span>
+  //     {address ? (
+  //       <Address address={address} ensProvider={mainnetProvider} blockExplorer={blockExplorer} />
+  //     ) : (
+  //       "Connecting..."
+  //     )}
+  //     <Balance address={address} provider={localProvider} price={price} />
+  //     <Wallet
+  //       address={address}
+  //       provider={userProvider}
+  //       ensProvider={mainnetProvider}
+  //       price={price}
+  //       color={currentTheme == "light" ? "#1890ff" : "#2caad9"}
+  //     />
+  //   </span>
+  // );
 
   return <>{modalButtons}</>;
 }
