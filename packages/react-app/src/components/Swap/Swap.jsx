@@ -52,7 +52,7 @@ export const Swap = ({ userProvider, targetNetwork }) => {
   const fromToken = "ETH";
   const toChain = "ARB";
   const toToken = "ARB";
-  const fromAmount = "1100000";
+  const fromAmount = "110000";
   const fromAddress = "0x0D2c2935569E2A213c82262A789Fc0Ccc59a4D3C";
 
   // Set up your wallet
@@ -68,17 +68,17 @@ export const Swap = ({ userProvider, targetNetwork }) => {
     // console.log(targetNetwork.chainId);
 
     const quote = await getQuote(fromChain, toChain, fromToken, toToken, fromAmount, fromAddress);
-    console.log(quote);
-    await checkAndSetAllowance(
-      wallet,
-      quote.action.fromToken.address,
-      quote.estimate.approvalAddress,
-      quote.action.fromAmount,
-    );
+    console.log(quote.transactionRequest);
+    // await checkAndSetAllowance(
+    //   wallet,
+    //   quote.action.fromToken.address,
+    //   quote.estimate.approvalAddress,
+    //   quote.action.fromAmount,
+    // );
 
-    // // const tx = await wallet.sendTransaction(quote.transactionRequest);
-    // console.log(quote);
-    // // await tx.wait();
+    // const tx = await wallet.sendTransaction(quote.transactionRequest);
+    // console.log(tx);
+    // await tx.wait();
     // if (fromChain !== toChain) {
     //   let result;
     //   do {
@@ -89,7 +89,7 @@ export const Swap = ({ userProvider, targetNetwork }) => {
 
   return (
     <div>
-      <h1>Swap</h1>
+      <h1>Swap LIFI API</h1>
       <button type="button" onClick={run}>
         Click Me to run
       </button>

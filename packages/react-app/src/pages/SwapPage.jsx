@@ -1,5 +1,7 @@
 import React from "react";
 import { Swap } from "../components/Swap/Swap";
+import { SwapLIFISDK } from "../components/Swap/SwapLIFISDK";
+import { TokenBalance } from "../components/Swap/TokenBalance";
 // import { useAppContext } from "../contexts/AppContext";
 
 function SwapPage({ targetNetwork, userProvider }) {
@@ -17,6 +19,8 @@ function SwapPage({ targetNetwork, userProvider }) {
         Click Me
       </button>
       <Swap userProvider={userProvider} targetNetwork={targetNetwork} />
+      <SwapLIFISDK targetNetwork={targetNetwork} />
+      <TokenBalance userProvider={userProvider} targetNetwork={targetNetwork} />
     </div>
   );
 }
