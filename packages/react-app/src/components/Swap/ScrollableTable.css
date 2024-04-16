@@ -1,0 +1,33 @@
+.table-container {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sticky-header table,
+.scrollable-body table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.sticky-header {
+  width: 100%;
+  overflow: hidden; /* Ensures no horizontal scrollbar appears on the header */
+}
+
+.scrollable-body {
+  max-height: 400px;
+  overflow-y: auto;
+  display: block;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+tr {
+  background-color: red;
+}

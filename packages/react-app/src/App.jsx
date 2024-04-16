@@ -8,6 +8,7 @@ import { INFURA_ID, NETWORKS } from "./constants";
 import WalletPage from "./pages/WalletPage";
 import SwapPage from "./pages/SwapPage";
 import Header from "./components/Header";
+import BalancePage from "./pages/BalancePage";
 import { useUserAddress } from "eth-hooks";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
@@ -115,6 +116,17 @@ function App({ subgraphUri }) {
           )}
         />
         <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} userProvider={userProvider} />} />
+        <Route
+          path="/balance"
+          render={() => (
+            <BalancePage
+              targetNetwork={targetNetwork}
+              setTargetNetwork={setTargetNetwork}
+              networkSettingsHelper={networkSettingsHelper}
+              address={address}
+            />
+          )}
+        />
       </Switch>
     </Router>
   );

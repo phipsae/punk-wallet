@@ -20,7 +20,7 @@ function SwapPage({ targetNetwork, userProvider }) {
       </button>
       <Swap userProvider={userProvider} targetNetwork={targetNetwork} />
       <SwapLIFISDK targetNetwork={targetNetwork} />
-      <TokenBalance userProvider={userProvider} targetNetwork={targetNetwork} />
+      {/* <TokenBalance userProvider={userProvider} targetNetwork={targetNetwork} /> */}
     </div>
   );
 }

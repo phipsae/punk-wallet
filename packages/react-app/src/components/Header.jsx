@@ -67,8 +67,11 @@ export default function Header({ extraProps }) {
     <Link key="nav2" to="/swap" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
       🔁 Swap
     </Link>,
+    <Link key="nav3" to="/balance" style={{ margin: "0 10px", fontSize: "14px", color: "black" }}>
+      💵 Balance
+    </Link>,
     <a
-      key="nav3"
+      key="nav4"
       href="https://github.com/scaffold-eth/punk-wallet"
       target="_blank"
       rel="noopener noreferrer"

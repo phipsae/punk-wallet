@@ -7,6 +7,7 @@ import { AppProvider } from "./contexts/AppContext";
 import App from "./App";
 import "./index.css";
 import { SafeInjectProvider } from "./contexts/SafeInjectContext";
+import "bootstrap/dist/css/bootstrap.css";
 
 const themes = {
   dark: `${process.env.PUBLIC_URL}/dark-theme.css`,
