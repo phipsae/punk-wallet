@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
-export const TokenTable = ({ items, loading }) => {
+export const TokenTable = ({ items, loading, message }) => {
+  /// as preparation for swapping
   const [selectedItem, setSelectedItem] = useState(null);
 
   const handleRowClick = item => {
@@ -61,6 +62,18 @@ export const TokenTable = ({ items, loading }) => {
                           <td className="col-2-6 text-end">${(item.priceUSD * item.amount).toFixed(2)}</td>
                         </tr>
                       ))}
+                    {items && items.length === 0 && (
+                      <tr>
+                        {/* prettier-ignore */}
+                        <td colSpan="4" className="message text-center">No assets</td>
+                      </tr>
+                    )}
+                    {message && (
+                      <tr>
+                        {/* prettier-ignore */}
+                        <td colSpan="4" className="message text-center" styles={{broder: "none"}}>{message}</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

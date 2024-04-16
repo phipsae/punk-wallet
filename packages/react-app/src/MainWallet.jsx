@@ -115,13 +115,13 @@ function MainWallet({
 
   const [networkSettingsModalOpen, setNetworkSettingsModalOpen] = useState(false);
 
-  useEffect(() => {
-    setLocalProvider(prevProvider =>
-      localProvider?.connection?.url == targetNetwork.rpcUrl
-        ? prevProvider
-        : new StaticJsonRpcProvider(targetNetwork.rpcUrl),
-    );
-  }, [targetNetwork]);
+  // useEffect(() => {
+  //   setLocalProvider(prevProvider =>
+  //     localProvider?.connection?.url == targetNetwork.rpcUrl
+  //       ? prevProvider
+  //       : new StaticJsonRpcProvider(targetNetwork.rpcUrl),
+  //   );
+  // }, [targetNetwork]);
 
   /// 🔭 block explorer URL - for header in AppContext
   const { blockExplorer, setBlockExplorer } = useAppContext();

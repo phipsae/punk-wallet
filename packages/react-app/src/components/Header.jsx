@@ -40,6 +40,9 @@ export default function Header({ extraProps }) {
         <Link to="/swap">🔁 Swap</Link>
       </Menu.Item>
       <Menu.Item key="3">
+        <Link to="/balance">💵 Balance</Link>
+      </Menu.Item>
+      <Menu.Item key="4">
         <a href="https://github.com/scaffold-eth/punk-wallet" target="_blank" rel="noopener noreferrer">
           ℹ️ Docs
         </a>

@@ -15,8 +15,8 @@
 }
 
 .scrollable-body {
-  max-height: 400px;
-  overflow-y: auto;
+  max-height: 385px;
+  overflow-y: scroll;
   display: block;
 }
 
@@ -30,4 +30,8 @@ td {
 
 tr {
   background-color: red;
+}
+
+td.message {
+  border: none;
 }

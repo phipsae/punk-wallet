@@ -523,7 +523,7 @@ export const NETWORKS = {
     color: "#ffdbb0",
     price: "uniswap",
     chainId: 534352,
-    rpcUrl: "https://rpc.scroll.io",
+    rpcUrl: "https://scroll-mainnet.public.blastapi.io",
     blockExplorer: "https://scrollscan.com/",
   },
   gnosis: {
@@ -587,14 +587,14 @@ export const NETWORKS = {
     rpcUrl: "https://mainnet.era.zksync.io",
     blockExplorer: "https://explorer.zksync.io/",
   },
-  buidlguidl: {
-    name: "buidlguidl",
-    color: "#1785ff",
-    price: 1,
-    chainId: 80216,
-    rpcUrl: `https://chain.buidlguidl.com:8545`,
-    blockExplorer: "https://etherscan.io/",
-  },
+  // buidlguidl: {
+  //   name: "buidlguidl",
+  //   color: "#1785ff",
+  //   price: 1,
+  //   chainId: 80216,
+  //   rpcUrl: `https://chain.buidlguidl.com:8545`,
+  //   blockExplorer: "https://etherscan.io/",
+  // },
   goerli: {
     name: "goerli",
     color: "#0975F6",
@@ -602,7 +602,7 @@ export const NETWORKS = {
     chainId: 5,
     faucet: "https://goerli-faucet.slock.it/",
     blockExplorer: "https://goerli.etherscan.io/",
-    rpcUrl: `https://eth-goerli.g.alchemy.com/v2/4vFnzFt4K0gFDvYodzTuH9ZjbGI-awSf`,
+    rpcUrl: `https://gateway.tenderly.co/public/goerli`,
   },
   sepolia: {
     name: "sepolia",

@@ -1,4 +1,3 @@
-// Import necessary parts from react-router-dom
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import Web3Modal from "web3modal";
@@ -35,6 +34,7 @@ function App({ subgraphUri }) {
   const [targetNetwork, setTargetNetwork] = useState(() => networkSettingsHelper.getSelectedItem(true));
 
   const [localProvider, setLocalProvider] = useState(() => new StaticJsonRpcProvider(targetNetwork.rpcUrl));
+
   useEffect(() => {
     setLocalProvider(prevProvider =>
       localProvider?.connection?.url == targetNetwork.rpcUrl
