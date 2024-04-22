@@ -1,26 +1,36 @@
-import React from "react";
-import { Swap } from "../components/Swap/Swap";
+import React, { useState } from "react";
+
 import { SwapLIFISDK } from "../components/Swap/SwapLIFISDK";
-import { TokenBalance } from "../components/Swap/TokenBalance";
+import SelectorWithSettings from "../components/SelectorWithSettings";
+import NetworkDisplay from "../components/NetworkDisplay";
 // import { useAppContext } from "../contexts/AppContext";
 
-function SwapPage({ targetNetwork, userProvider }) {
-  // const { web3ModalInstance, localProviderContext, userAddress } = useAppContext();
+function SwapPage({ targetNetwork, setTargetNetwork, address, networkSettingsHelper, userProvider }) {
+  const [setNetworkSettingsModalOpen] = useState(false);
   return (
     <div>
       <h1>Here you can swap soon</h1>
       <button
         type="button"
         onClick={() => {
-          console.log(targetNetwork);
+          console.log(address, userProvider);
         }}
       >
-        {" "}
         Click Me
       </button>
-      <Swap userProvider={userProvider} targetNetwork={targetNetwork} />
-      <SwapLIFISDK targetNetwork={targetNetwork} />
-      {/* <TokenBalance userProvider={userProvider} targetNetwork={targetNetwork} /> */}
+      <div>
+        <SelectorWithSettings
+          settingsHelper={networkSettingsHelper}
+          settingsModalOpen={setNetworkSettingsModalOpen}
+          itemCoreDisplay={network => <NetworkDisplay network={network} />}
+          onChange={() => {
+            setTargetNetwork(networkSettingsHelper.getSelectedItem(true));
+          }}
+          optionStyle={{ lineHeight: 1.1 }}
+        />
+      </div>
+
+      <SwapLIFISDK targetNetwork={targetNetwork} address={address} userProvider={userProvider} />
     </div>
   );
 }

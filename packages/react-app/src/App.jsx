@@ -115,7 +115,18 @@ function App({ subgraphUri }) {
             />
           )}
         />
-        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} userProvider={userProvider} />} />
+        <Route
+          path="/swap"
+          render={() => (
+            <SwapPage
+              targetNetwork={targetNetwork}
+              setTargetNetwork={setTargetNetwork}
+              networkSettingsHelper={networkSettingsHelper}
+              address={address}
+              userProvider={userProvider}
+            />
+          )}
+        />
         <Route
           path="/balance"
           render={() => (

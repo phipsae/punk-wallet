@@ -35,3 +35,7 @@ tr {
 td.message {
   border: none;
 }
+
+.ant-input-number-handler-wrap {
+  visibility: hidden;
+}

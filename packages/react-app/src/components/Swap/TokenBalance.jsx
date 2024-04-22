@@ -2,18 +2,13 @@ import React, { useState, useEffect } from "react";
 import { RedoOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { LiFi } from "@lifi/sdk";
-import { Switch } from "antd";
 import "./ScrollableTable.css";
 import { TokenTable } from "./TokenTable";
-import SelectorWithSettings from "../SelectorWithSettings";
-import NetworkDisplay from "../NetworkDisplay";
 
-export const TokenBalance = ({ targetNetwork, setTargetNetwork, networkSettingsHelper, address }) => {
+export const TokenBalance = ({ targetNetwork, address, showMyTokens, setSelectedItem }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allTokensBalances, setAllTokensBalances] = useState();
-  const [showMyTokens, setShowMyTokens] = useState(false);
-  const [setNetworkSettingsModalOpen] = useState(false);
   const [message, setMessage] = useState("");
 
   const chainId = targetNetwork.chainId;
@@ -39,10 +34,10 @@ export const TokenBalance = ({ targetNetwork, setTargetNetwork, networkSettingsH
     }
   };
 
-  const onChange = checked => {
-    console.log(`switch to ${checked}`);
-    setShowMyTokens(!showMyTokens);
-  };
+  // const onChange = checked => {
+  //   console.log(`switch to ${checked}`);
+  //   setShowMyTokens(!showMyTokens);
+  // };
 
   const supportedNetworks = {
     mainnet: 1,
@@ -96,7 +91,7 @@ export const TokenBalance = ({ targetNetwork, setTargetNetwork, networkSettingsH
   useEffect(() => {
     const handler = setTimeout(() => {
       run(showMyTokens);
-    }, 500); // Delay the run function by 500 ms
+    }, 500); // Delay of 500 ms
 
     return () => {
       clearTimeout(handler);
@@ -105,73 +100,42 @@ export const TokenBalance = ({ targetNetwork, setTargetNetwork, networkSettingsH
 
   return (
     <div>
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="row navbar navbar-light bg-light justify-content-between">
-              <div className="col-7 d-flex flex-start" style={{ marginLeft: "5px" }}>
-                <div className="row d-flex flex-row align-items-center">
-                  <div className="col-8">
-                    <SelectorWithSettings
-                      settingsHelper={networkSettingsHelper}
-                      settingsModalOpen={setNetworkSettingsModalOpen}
-                      itemCoreDisplay={network => <NetworkDisplay network={network} />}
-                      onChange={() => {
-                        setTargetNetwork(networkSettingsHelper.getSelectedItem(true));
-                      }}
-                      optionStyle={{ lineHeight: 1.1 }}
-                    />
-                  </div>
-                  <div className="col-4 d-flex flex-row align-items-center">
-                    <Switch defaultChecked onChange={onChange} />
-                    <span className="text-small" style={{ fontSize: "8px", marginLeft: "5px" }}>
-                      (all tokens)
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="col-4">
-                <div className="row align-items-center">
-                  <div className="col-9">
-                    {/* <form className="form-inline"> */}
-                    <input
-                      className="form-control mr-sm-2"
-                      type="search"
-                      placeholder="Search..."
-                      aria-label="Search"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                    {/* </form> */}
-                  </div>
-                  <div className="col-2">
-                    <button
-                      type="button"
-                      onClick={run}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "inherit",
-                        padding: 0,
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                    >
-                      {loading ? (
-                        <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
-                      ) : (
-                        <RedoOutlined style={{ fontSize: "24px", fontWeight: "bold" }} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="row navbar navbar-light bg-light justify-content-between">
+        <div className="row align-items-center d-flex justify-content-center">
+          <div className="col">
+            <input
+              className="form-control mr-sm-2"
+              type="search"
+              placeholder="Search by token symbol..."
+              aria-label="Search"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="col-2 d-flex justify-content-end">
+            <button
+              type="button"
+              onClick={() => run(showMyTokens)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                padding: 0,
+                cursor: "pointer",
+                outline: "none",
+              }}
+            >
+              {loading ? (
+                <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
+              ) : (
+                <RedoOutlined style={{ fontSize: "24px", fontWeight: "bold" }} />
+              )}
+            </button>
           </div>
         </div>
-        <div style={{ marginTop: "20px" }}>
-          <TokenTable items={allTokensBalances} loading={loading} message={message} />
-        </div>
+      </div>
+      <div style={{ marginTop: "20px" }}>
+        <TokenTable items={allTokensBalances} loading={loading} message={message} setSelectedItem={setSelectedItem} />
       </div>
     </div>
   );
