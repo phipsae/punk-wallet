@@ -76,6 +76,24 @@ function App({ subgraphUri }) {
     },
   });
 
+  /* eslint-disable */
+  window.ethereum &&
+    window.ethereum.on("chainChanged", chainId => {
+      web3Modal.cachedProvider &&
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+    });
+
+  window.ethereum &&
+    window.ethereum.on("accountsChanged", accounts => {
+      web3Modal.cachedProvider &&
+        setTimeout(() => {
+          window.location.reload();
+        }, 1);
+    });
+  /* eslint-enable */
+
   return (
     <Router>
       <div className="site-page-header-ghost-wrapper">
