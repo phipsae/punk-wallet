@@ -24,6 +24,8 @@ export default function Header({ extraProps }) {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 850);
 
+  console.log("Web3Modal", web3Modal);
+
   const walletDisplay =
     web3Modal && web3Modal.cachedProvider ? (
       ""
@@ -87,7 +89,7 @@ export default function Header({ extraProps }) {
   const extraComponents = [
     <Address
       key="address"
-      fontSize={32}
+      fontSize={30}
       address={address}
       ensProvider={mainnetProvider}
       blockExplorer={blockExplorer}

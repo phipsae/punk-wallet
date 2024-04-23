@@ -1,11 +1,12 @@
-import { Web3Provider } from "@ethersproject/providers";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import React, { useCallback, useEffect } from "react";
+import { LoginOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { Web3Provider } from "@ethersproject/providers";
+import { useAppContext } from "../contexts/AppContext";
+
 // import { useThemeSwitcher } from "react-css-theme-switcher";
 // import Address from "./Address";
 // import Balance from "./Balance";
 // import Wallet from "./Wallet";
-import { useAppContext } from "../contexts/AppContext";
 
 /*
   ~ What it does? ~
@@ -51,6 +52,7 @@ export default function Account({
   // minimized,
   web3Modal,
   // logoutOfWeb3Modal,
+  // loadWeb3Modal,
   // blockExplorer,
 }) {
   const modalButtons = [];
@@ -58,7 +60,7 @@ export default function Account({
   const { injectedProvider, setInjectedProvider } = useAppContext();
 
   const logoutOfWeb3Modal = async () => {
-    await web3Modal.clearCachedProvider();
+    web3Modal.clearCachedProvider();
     if (injectedProvider && injectedProvider.provider && injectedProvider.provider.disconnect) {
       await injectedProvider.provider.disconnect();
     }
@@ -74,20 +76,20 @@ export default function Account({
       logoutOfWeb3Modal();
     });
     setInjectedProvider(new Web3Provider(provider));
-  }, [setInjectedProvider]);
+  }, [web3Modal]);
 
   useEffect(() => {
     if (web3Modal && web3Modal.cachedProvider) {
       loadWeb3Modal();
     }
-  }, [loadWeb3Modal]);
+  }, []);
 
   if (web3Modal) {
     if (web3Modal.cachedProvider) {
       modalButtons.push(
         <span key="logoutbutton" style={{ verticalAlign: "middle", paddingLeft: 16, fontSize: 32 }}>
           {/* <Tooltip title="Disconnect Wallet"> */}
-          <LogoutOutlined onClick={logoutOfWeb3Modal} style={{ color: "#1890ff" }} />
+          <CloseCircleOutlined onClick={logoutOfWeb3Modal} style={{ color: "#1890ff" }} />
           {/* </Tooltip> */}
         </span>,
       );
