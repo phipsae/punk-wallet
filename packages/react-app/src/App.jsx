@@ -76,31 +76,6 @@ function App({ subgraphUri }) {
     },
   });
 
-  // const logoutOfWeb3Modal = async () => {
-  //   web3Modal.clearCachedProvider();
-  //   if (injectedProvider && injectedProvider.provider && injectedProvider.provider.disconnect) {
-  //     await injectedProvider.provider.disconnect();
-  //   }
-  //   setTimeout(() => {
-  //     window.location.reload();
-  //   }, 1);
-  // };
-
-  // const loadWeb3Modal = useCallback(async () => {
-  //   const provider = await web3Modal.connect();
-  //   provider.on("disconnect", () => {
-  //     console.log("LOGOUT!");
-  //     logoutOfWeb3Modal();
-  //   });
-  //   setInjectedProvider(new Web3Provider(provider));
-  // }, [web3Modal]);
-
-  // useEffect(() => {
-  //   if (web3Modal && web3Modal.cachedProvider) {
-  //     loadWeb3Modal();
-  //   }
-  // }, []);
-
   return (
     <Router>
       <div className="site-page-header-ghost-wrapper">
