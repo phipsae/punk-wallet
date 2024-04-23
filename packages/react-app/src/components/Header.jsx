@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { PageHeader, Menu, Dropdown } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
@@ -23,6 +22,8 @@ export default function Header({ extraProps }) {
   } = extraProps || {};
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 850);
+
+  console.log("Web3Modal", web3Modal);
 
   const walletDisplay =
     web3Modal && web3Modal.cachedProvider ? (
@@ -81,7 +82,7 @@ export default function Header({ extraProps }) {
   const extraComponents = [
     <Address
       key="address"
-      fontSize={32}
+      fontSize={30}
       address={address}
       ensProvider={mainnetProvider}
       blockExplorer={blockExplorer}

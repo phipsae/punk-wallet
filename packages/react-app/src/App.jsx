@@ -1,6 +1,6 @@
 // Import necessary parts from react-router-dom
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { useAppContext } from "./contexts/AppContext";
@@ -10,6 +10,7 @@ import SwapPage from "./pages/SwapPage";
 import Header from "./components/Header";
 import { useUserAddress } from "eth-hooks";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
+import { Web3Provider } from "@ethersproject/providers";
 
 import { NETWORK_SETTINGS_STORAGE_KEY, getNetworkWithSettings } from "./helpers/NetworkSettingsHelper";
 
@@ -20,7 +21,7 @@ import { useLocalStorage, useUserProvider } from "./hooks";
 function App({ subgraphUri }) {
   const networks = Object.values(NETWORKS);
 
-  const { setWeb3Modal, blockExplorer, priceContext, injectedProvider } = useAppContext();
+  const { blockExplorer, priceContext, injectedProvider, setInjectedProvider } = useAppContext();
 
   const [networkSettings, setNetworkSettings] = useLocalStorage(NETWORK_SETTINGS_STORAGE_KEY, {});
   const networkSettingsHelper = new SettingsHelper(
@@ -52,7 +53,7 @@ function App({ subgraphUri }) {
   /*
   Web3 modal helps us "connect" external wallets:
 */
-  const web3ModalInstance = new Web3Modal({
+  const web3Modal = new Web3Modal({
     // network: "mainnet", // optional
     cacheProvider: true, // optional
     providerOptions: {
@@ -75,9 +76,30 @@ function App({ subgraphUri }) {
     },
   });
 
-  useEffect(() => {
-    setWeb3Modal(web3ModalInstance);
-  }, []);
+  // const logoutOfWeb3Modal = async () => {
+  //   web3Modal.clearCachedProvider();
+  //   if (injectedProvider && injectedProvider.provider && injectedProvider.provider.disconnect) {
+  //     await injectedProvider.provider.disconnect();
+  //   }
+  //   setTimeout(() => {
+  //     window.location.reload();
+  //   }, 1);
+  // };
+
+  // const loadWeb3Modal = useCallback(async () => {
+  //   const provider = await web3Modal.connect();
+  //   provider.on("disconnect", () => {
+  //     console.log("LOGOUT!");
+  //     logoutOfWeb3Modal();
+  //   });
+  //   setInjectedProvider(new Web3Provider(provider));
+  // }, [web3Modal]);
+
+  // useEffect(() => {
+  //   if (web3Modal && web3Modal.cachedProvider) {
+  //     loadWeb3Modal();
+  //   }
+  // }, []);
 
   return (
     <Router>
@@ -92,7 +114,7 @@ function App({ subgraphUri }) {
             networkSettingsHelper,
             setTargetNetwork,
             priceContext,
-            web3ModalInstance,
+            web3Modal,
           }}
         />
       </div>
@@ -111,10 +133,11 @@ function App({ subgraphUri }) {
               userProvider={userProvider}
               address={address}
               mainnetProvider={mainnetProvider}
+              web3Modal={web3Modal}
             />
           )}
         />
-        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} web3Modal={web3ModalInstance} />} />
+        <Route path="/swap" render={() => <SwapPage targetNetwork={targetNetwork} web3Modal={web3Modal} />} />
       </Switch>
     </Router>
   );
