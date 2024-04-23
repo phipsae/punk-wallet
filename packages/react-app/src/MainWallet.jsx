@@ -110,7 +110,6 @@ function MainWallet({
   userProvider,
   address,
   mainnetProvider,
-  web3Modal,
 }) {
   const [dollarMode, setDollarMode] = useLocalStorage("dollarMode", true);
 

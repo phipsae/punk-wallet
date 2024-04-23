@@ -126,7 +126,6 @@ function App({ subgraphUri }) {
               userProvider={userProvider}
               address={address}
               mainnetProvider={mainnetProvider}
-              web3Modal={web3Modal}
             />
           )}
         />
