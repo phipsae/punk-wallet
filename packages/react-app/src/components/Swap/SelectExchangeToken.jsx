@@ -9,6 +9,7 @@ export const SelectExchangeToken = ({
   setSelectedItem,
   showTokenModal,
   setShowTokenModal,
+  excludeToken,
 }) => {
   const openTokenModal = () => {
     console.log("click");
@@ -27,9 +28,13 @@ export const SelectExchangeToken = ({
       {!showTokenModal ? (
         <button type="button" className="btn btn-light" onClick={openTokenModal}>
           {showMyTokens ? (
-            <div>From Token - {selectedItem && selectedItem.coinKey}</div>
+            <div>
+              From Token - {selectedItem && selectedItem.coinKey} - {selectedItem && selectedItem.amount}
+            </div>
           ) : (
-            <div>To Token - {selectedItem && selectedItem.coinKey}</div>
+            <div>
+              To Token - {selectedItem && selectedItem.coinKey} - {selectedItem && selectedItem.amount}
+            </div>
           )}
         </button>
       ) : (
@@ -42,6 +47,7 @@ export const SelectExchangeToken = ({
             address={address}
             showMyTokens={showMyTokens}
             setSelectedItem={setSelectedItem}
+            excludeToken={excludeToken}
           />
         </div>
       )}

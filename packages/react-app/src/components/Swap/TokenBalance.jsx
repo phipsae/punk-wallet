@@ -5,7 +5,7 @@ import { LiFi } from "@lifi/sdk";
 import "./ScrollableTable.css";
 import { TokenTable } from "./TokenTable";
 
-export const TokenBalance = ({ targetNetwork, address, showMyTokens, setSelectedItem }) => {
+export const TokenBalance = ({ targetNetwork, address, showMyTokens, setSelectedItem, excludeToken }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [allTokensBalances, setAllTokensBalances] = useState();
@@ -66,6 +66,11 @@ export const TokenBalance = ({ targetNetwork, address, showMyTokens, setSelected
         );
         if (_onlyBalance) {
           balancesFullSort = balancesFullSort.filter(item => item.amount > 0);
+        }
+
+        /// to ensure that same token I want to swap from is not displyed in the toToken
+        if (excludeToken != null) {
+          balancesFullSort = balancesFullSort.filter(item => item.coinKey !== excludeToken.coinKey);
         }
 
         if (searchTerm && balancesFullSort) {

@@ -24,8 +24,6 @@ export default function Header({ extraProps }) {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 850);
 
-  console.log("Web3Modal", web3Modal);
-
   const walletDisplay =
     web3Modal && web3Modal.cachedProvider ? (
       ""
