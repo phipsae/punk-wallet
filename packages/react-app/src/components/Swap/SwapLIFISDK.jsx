@@ -184,6 +184,8 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
       </button>
       <br />
       <br />
+      <InputNumber addonBefore={<>💵 USD 🔀</>} disabled style={{ width: "100%" }} />
+      <br />
       <br />
 
       {Object.values(supportedNetworks).includes(targetNetwork.chainId) ? (
@@ -217,6 +219,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
                 status="error"
                 min={0}
                 precision={6}
+                prefix="￥"
                 disabled={disableInputNumber}
                 // defaultValue={0}
                 value={inputAmount}
