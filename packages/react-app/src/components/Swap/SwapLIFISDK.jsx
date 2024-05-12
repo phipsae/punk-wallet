@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { LiFi } from "@lifi/sdk";
 import { ethers } from "ethers";
-import { InputNumber } from "antd";
+import axios from "axios";
+import { InputNumber, Input } from "antd";
 import { SelectExchangeToken } from "./SelectExchangeToken";
 import { route1 } from "./Route";
+import { from } from "apollo-boost";
 
 export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [fromToken, setFromToken] = useState();
@@ -12,13 +14,17 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [toTokenModal, setToTokenModal] = useState(false);
   const [allRoutes, setAllRoutes] = useState([{}]);
   const [route0, setRoute0] = useState();
-  const [inputAmount, setInputAmount] = useState(0);
+  const [inputAmount, setInputAmount] = useState();
   const [warningMessage, setWarningMessage] = useState("");
   const [disableExchangeButton, setDisableExchangeButton] = useState(true);
   const [disableInputNumber, setDisableInputNumber] = useState(true);
   const [userBalanceNativeToken, setUserBalanceNativeToken] = useState();
   const [gasPriceNativeToken, setGasPriceNativeToken] = useState();
+  const [tokenCheckMessage, setTokenCheckMessage] = useState("loading");
+
   // const [loadingExchange, setLoadingExchange] = useState(false);
+
+  const timeoutRef = useRef(null);
 
   const lifi = new LiFi({
     integrator: "PunkWallet",
@@ -35,32 +41,97 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     // zksync: 324,
   };
 
-  const routesRequestInput = {
-    fromAddress: address,
-    fromChainId: targetNetwork.chainId,
-    fromAmount: fromToken ? String(inputAmount * 10 ** fromToken.decimals) : "", // 1USDT
-    fromTokenAddress: fromToken ? fromToken.address : "", // OP OP
-    toChainId: targetNetwork.chainId,
-    toTokenAddress: toToken ? toToken.address : "", // OP USDCe
-    options: {
-      // integrator: "jumper.exchange",
-      slippage: 3 / 100, // 3%
-      order: "RECOMMENDED",
-      // order: "CHEAPEST",
-      // slippage: 0.005,
-      maxPriceImpact: 0.4,
-      allowSwitchChain: true,
-      insurance: false,
-    },
+  const getTokens = async _chain => {
+    try {
+      const optionalFilter = _chain; // Both numeric and mnemonic can be used
+      /// chainTypes can be of type SVM and EVM. By default, only EVM tokens will be returned
+      const optionalChainTypes = "EVM";
+      const result = await axios.get("https://li.quest/v1/tokens", {
+        params: {
+          chains: optionalFilter.join(","),
+          chainTypes: optionalChainTypes,
+        },
+      });
+      return result.data;
+    } catch (error) {
+      return error;
+    }
+  };
+
+  const checkIfTokens = async () => {
+    try {
+      if (Object.values(supportedNetworks).includes(targetNetwork.chainId)) {
+        const allTokensPromise = getTokens([targetNetwork.chainId]);
+        const allTokensFul = await allTokensPromise;
+
+        const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
+        const balancesFul = await balances;
+
+        // let balancesFullSort = balancesFul[targetNetwork.chainId].sort(
+        //   (a, b) => parseFloat(b.amount * b.priceUSD) - parseFloat(a.amount * a.priceUSD),
+        // );
+
+        const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
+
+        if (balancesFullSort.length > 0) {
+          setTokenCheckMessage("");
+        } else {
+          console.log("No tokens");
+          setTokenCheckMessage("No tokens");
+        }
+
+        console.log(balancesFullSort);
+      } else {
+        setTokenCheckMessage("Network not supported");
+      }
+    } catch (error) {
+      console.error("Failed to fetch from blockchain:", error);
+    }
+  };
+
+  const switchTokens = () => {
+    const tempToken = fromToken;
+    setFromToken(toToken);
+    setToToken(tempToken);
+  };
+
+  const createRouteRequest = () => {
+    const routesRequestInput = {
+      fromAddress: address,
+      fromChainId: targetNetwork.chainId,
+      fromAmount: fromToken ? String(inputAmount * 10 ** fromToken.decimals) : "",
+      fromTokenAddress: fromToken ? fromToken.address : "", // OP OP
+      toChainId: targetNetwork.chainId,
+      toTokenAddress: toToken ? toToken.address : "", // OP USDCe
+      options: {
+        // integrator: "jumper.exchange",
+        slippage: 3 / 100, // 3%
+        order: "RECOMMENDED",
+        // order: "CHEAPEST",
+        // slippage: 0.005,
+        maxPriceImpact: 0.4,
+        allowSwitchChain: true,
+        insurance: false,
+      },
+    };
+    return routesRequestInput;
   };
 
   const getRoutesLiFi = async _routesRequest => {
-    const result = await lifi.getRoutes(_routesRequest);
-    const routes = result.routes;
-    setAllRoutes(routes);
-    const chosenRoute = routes[0];
-    setRoute0(chosenRoute);
-    console.log("ChosenRoute", chosenRoute);
+    try {
+      const result = await lifi.getRoutes(_routesRequest);
+      setAllRoutes(result.routes);
+      if (result.routes.length > 0) {
+        setRoute0(result.routes[0]);
+        console.log("ChosenRoute", result.routes[0]);
+      } else {
+        console.log("No routes found");
+        setWarningMessage("No routes available");
+      }
+    } catch (error) {
+      console.error("Error fetching routes:", error);
+      setWarningMessage("Failed to fetch routes: " + error.message);
+    }
   };
 
   useEffect(() => {
@@ -69,36 +140,88 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   }, [targetNetwork]);
 
   useEffect(() => {
+    if (address) {
+      checkIfTokens();
+    }
+  }, [address]);
+
+  useEffect(() => {
     if (fromToken && toToken && fromToken.address === toToken.address) {
-      setWarningMessage("pls don't select same token");
+      setWarningMessage("Pls don't select same token");
       setDisableExchangeButton(true);
       setDisableInputNumber(true);
     } else {
-      console.log("HERE", fromToken, toToken, fromToken === toToken);
       setWarningMessage("");
     }
   }, [fromToken, toToken]);
 
+  // useEffect(() => {
+  //   if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
+  //     getRoutesLiFi(createRouteRequest());
+  //   }
+  // }, [fromToken, toToken, inputAmount]);
+
   useEffect(() => {
-    if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
-      getRoutesLiFi(routesRequestInput);
-    }
-  }, [fromToken, toToken, inputAmount]);
+    // Function to call getRoutesLiFi with throttling
+    const handleGetRoutes = () => {
+      if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
+        // Clear the existing timeout if it exists
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        // Set a new timeout
+        timeoutRef.current = setTimeout(() => {
+          getRoutesLiFi(createRouteRequest());
+        }, 1000); // Delay the function call by 1000 milliseconds (1 second)
+      }
+    };
+
+    // Call the throttled function
+    handleGetRoutes();
+
+    // Cleanup function to clear the timeout when the component unmounts or dependencies change
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [fromToken, toToken, inputAmount]); // Dependencies array
 
   const provider = new ethers.providers.JsonRpcProvider(targetNetwork.rpcUrl, targetNetwork.chainId);
   const walletWithProvider = new ethers.Wallet(localStorage.metaPrivateKey, provider);
 
-  const getInputAmount = value => {
-    // console.log(value);
-    if (fromToken.address !== toToken.address) {
-      if (value < fromToken.amount) {
-        setInputAmount(value);
-        setWarningMessage("");
-        setDisableExchangeButton(false);
-      } else {
-        setWarningMessage("not enough funds");
-        setDisableExchangeButton(true);
-      }
+  const getInputAmount = event => {
+    const value = event.target.value;
+    const cleanValue = value.replace(/[^0-9.]/g, ""); // Remove non-numeric characters except the decimal point
+
+    // Allow only one decimal point
+    const parts = cleanValue.split(".");
+    if (parts.length > 2) {
+      // More than one decimal point
+      setInputAmount(parts[0] + "." + parts[1].slice(0)); // Include only first decimal section
+    } else {
+      setInputAmount(cleanValue); // Set cleaned value
+    }
+
+    // Convert to number only when necessary for validation
+    const numericValue = parseFloat(value);
+
+    if (value === "") {
+      setWarningMessage("Please enter an amount.");
+      setDisableExchangeButton(true);
+    } else if (Number.isNaN(numericValue) && value !== "." && value !== "") {
+      setWarningMessage("Please enter a valid number.");
+      setDisableExchangeButton(true);
+    } else if (fromToken && numericValue > parseFloat(fromToken.amount)) {
+      setWarningMessage("Not enough funds.");
+      setDisableExchangeButton(true);
+    } else if (numericValue > 0) {
+      setWarningMessage("");
+      setDisableExchangeButton(false);
+    } else {
+      setWarningMessage("Input a positive number.");
+      setDisableExchangeButton(true);
     }
   };
 
@@ -115,7 +238,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
       // setInputAmount(0);
     } catch (error) {
       console.log(error);
-      getRoutesLiFi(routesRequestInput);
+      getRoutesLiFi(createRouteRequest());
       setWarningMessage(error.message);
     }
   };
@@ -159,22 +282,16 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     }
   }, [fromToken]);
 
-  // useEffect(() => {
-  //   // Reset the input amount to 0 whenever fromToken changes
-  //   console.log("Resetting input amount because fromToken changed:", fromToken);
-  //   setInputAmount(0);
-  //   // Also, handle any other updates required when fromToken changes, e.g., resetting warnings or disabling buttons
-  //   setWarningMessage("");
-  //   setDisableExchangeButton(true); // Assume the button should be disabled initially until valid input is provided
-  // }, [fromToken]);
-
   return (
     <>
-      <button type="button" onClick={() => console.log(gasPriceNativeToken)}>
-        UserBalance
+      <button type="button" onClick={() => checkIfTokens()}>
+        getTokens
       </button>
-      <button type="button" onClick={() => console.log(userBalanceNativeToken)}>
+      <button type="button" onClick={() => console.log(address)}>
         Get UserBalance
+      </button>
+      <button type="button" onClick={() => switchTokens()}>
+        Switch
       </button>
       <button
         type="button"
@@ -183,12 +300,14 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         Native Token Gas Cost
       </button>
       <br />
-      <br />
+      {/* <br />
       <InputNumber addonBefore={<>💵 USD 🔀</>} disabled style={{ width: "100%" }} />
-      <br />
+      <br /> */}
       <br />
 
-      {Object.values(supportedNetworks).includes(targetNetwork.chainId) ? (
+      {tokenCheckMessage && <div>{tokenCheckMessage}</div>}
+
+      {!tokenCheckMessage && Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
         <div className="d-flex col">
           <div className="col">
             <div>
@@ -215,14 +334,21 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
               />
             </div>
             <div>
-              <InputNumber
-                status="error"
-                min={0}
-                precision={6}
-                prefix="￥"
-                disabled={disableInputNumber}
-                // defaultValue={0}
+              <Input
                 value={inputAmount}
+                placeholder="Enter amount"
+                prefix={
+                  fromToken ? (
+                    <img
+                      src={fromToken.logoURI}
+                      alt="n/a"
+                      style={{ width: "20px", marginRight: "10px", verticalAlign: "middle" }}
+                    />
+                  ) : (
+                    <span> </span>
+                  )
+                }
+                disabled={disableInputNumber}
                 onChange={getInputAmount}
               />
               {warningMessage}
@@ -249,8 +375,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
             </div>
           </div>
         </div>
-      ) : (
-        <>Network not supported</>
       )}
     </>
   );
