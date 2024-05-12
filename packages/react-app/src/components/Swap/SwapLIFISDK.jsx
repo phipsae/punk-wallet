@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { LiFi } from "@lifi/sdk";
 import { ethers } from "ethers";
 import axios from "axios";
-import { InputNumber, Input } from "antd";
+import { ArrowRightOutlined } from "@ant-design/icons";
+import { Input } from "antd";
 import { SelectExchangeToken } from "./SelectExchangeToken";
 import { route1 } from "./Route";
-import { from } from "apollo-boost";
 
 export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [fromToken, setFromToken] = useState();
@@ -67,10 +67,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
         const balancesFul = await balances;
 
-        // let balancesFullSort = balancesFul[targetNetwork.chainId].sort(
-        //   (a, b) => parseFloat(b.amount * b.priceUSD) - parseFloat(a.amount * a.priceUSD),
-        // );
-
         const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
 
         if (balancesFullSort.length > 0) {
@@ -128,6 +124,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         console.log("No routes found");
         setWarningMessage("No routes available");
       }
+      console.log("in here");
     } catch (error) {
       console.error("Error fetching routes:", error);
       setWarningMessage("Failed to fetch routes: " + error.message);
@@ -284,9 +281,9 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
   return (
     <>
-      <button type="button" onClick={() => checkIfTokens()}>
+      {/* <button type="button" onClick={() => testRun()}>
         getTokens
-      </button>
+      </button> */}
       <button type="button" onClick={() => console.log(address)}>
         Get UserBalance
       </button>
@@ -310,29 +307,51 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
       {!tokenCheckMessage && Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
         <div className="d-flex col">
           <div className="col">
-            <div>
-              <SelectExchangeToken
-                targetNetwork={targetNetwork}
-                address={address}
-                showMyTokens
-                selectedItem={fromToken}
-                setSelectedItem={setFromToken}
-                showTokenModal={fromTokenModal}
-                setShowTokenModal={setFromTokenModal}
-              />
+            <div className="d-flex" style={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <div>
+                <SelectExchangeToken
+                  targetNetwork={targetNetwork}
+                  address={address}
+                  showMyTokens
+                  selectedItem={fromToken}
+                  setSelectedItem={setFromToken}
+                  showTokenModal={fromTokenModal}
+                  setShowTokenModal={setFromTokenModal}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => switchTokens()}
+                style={{
+                  width: "40px", // Makes the button square which will become a circle with borderRadius
+                  height: "40px",
+                  lineHeight: "40px", // Vertically centers the text/icon in the button
+                  borderRadius: "50%", // This makes the square a circle
+                  backgroundColor: "#808080", // Example: using a Bootstrap-like blue color
+                  color: "white",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <ArrowRightOutlined />
+              </button>
+              <div>
+                <SelectExchangeToken
+                  targetNetwork={targetNetwork}
+                  address={address}
+                  showMyTokens={false}
+                  selectedItem={toToken}
+                  setSelectedItem={setToToken}
+                  showTokenModal={toTokenModal}
+                  setShowTokenModal={setToTokenModal}
+                  excludeToken={fromToken || null}
+                />
+              </div>
             </div>
-            <div>
-              <SelectExchangeToken
-                targetNetwork={targetNetwork}
-                address={address}
-                showMyTokens={false}
-                selectedItem={toToken}
-                setSelectedItem={setToToken}
-                showTokenModal={toTokenModal}
-                setShowTokenModal={setToTokenModal}
-                excludeToken={fromToken || null}
-              />
-            </div>
+
             <div>
               <Input
                 value={inputAmount}

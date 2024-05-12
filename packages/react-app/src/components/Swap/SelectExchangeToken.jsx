@@ -27,15 +27,34 @@ export const SelectExchangeToken = ({
     <>
       {!showTokenModal ? (
         <button type="button" className="btn btn-light" onClick={openTokenModal}>
-          {showMyTokens ? (
-            <div>
-              From Token - {selectedItem && selectedItem.coinKey} - {selectedItem && selectedItem.amount}
+          <div style={{ width: "150px" }}>
+            <div style={{ textAlign: "left", fontWeight: "bold" }}> {showMyTokens ? "From" : "To"} </div>
+            <div className="d-flex" style={{ alignItems: "center", marginTop: "10px" }}>
+              <div>
+                {selectedItem ? (
+                  <img
+                    src={selectedItem.logoURI}
+                    alt={selectedItem.coinKey || "n/a"}
+                    style={{ width: "30px", height: "30px", marginRight: "10px" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "30px",
+                      height: "30px",
+                      backgroundColor: "grey",
+                      borderRadius: "50%",
+                      marginRight: "10px",
+                    }}
+                  />
+                )}
+              </div>
+              <div style={{ textAlign: "left", marginLeft: "10px" }}>
+                <div>{selectedItem ? selectedItem.coinKey : "-"}</div>
+                <div>{selectedItem ? Number(selectedItem.amount).toFixed(4) : "-"}</div>
+              </div>
             </div>
-          ) : (
-            <div>
-              To Token - {selectedItem && selectedItem.coinKey} - {selectedItem && selectedItem.amount}
-            </div>
-          )}
+          </div>
         </button>
       ) : (
         <div>
