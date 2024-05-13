@@ -2,16 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { LiFi } from "@lifi/sdk";
 import { ethers } from "ethers";
 import axios from "axios";
-import { ArrowRightOutlined } from "@ant-design/icons";
-import { Input } from "antd";
-import { SelectExchangeToken } from "./SelectExchangeToken";
-import { route1 } from "./Route";
+import { Input, notification } from "antd";
+import { RedoOutlined, SmileOutlined } from "@ant-design/icons";
+import { SelectTokens } from "./SelectTokens";
 
 export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [fromToken, setFromToken] = useState();
   const [toToken, setToToken] = useState();
-  const [fromTokenModal, setFromTokenModal] = useState(false);
-  const [toTokenModal, setToTokenModal] = useState(false);
+  const [showTokenModal, setShowTokenModal] = useState(false);
   const [allRoutes, setAllRoutes] = useState([{}]);
   const [route0, setRoute0] = useState();
   const [inputAmount, setInputAmount] = useState();
@@ -21,8 +19,10 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [userBalanceNativeToken, setUserBalanceNativeToken] = useState();
   const [gasPriceNativeToken, setGasPriceNativeToken] = useState();
   const [tokenCheckMessage, setTokenCheckMessage] = useState("loading");
+  const [allowRoutes, setAllowRoutes] = useState(false);
+  const [generalMessage, setGeneralMessage] = useState("");
 
-  // const [loadingExchange, setLoadingExchange] = useState(false);
+  const [loadingExchange, setLoadingExchange] = useState(false);
 
   const timeoutRef = useRef(null);
 
@@ -83,12 +83,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     } catch (error) {
       console.error("Failed to fetch from blockchain:", error);
     }
-  };
-
-  const switchTokens = () => {
-    const tempToken = fromToken;
-    setFromToken(toToken);
-    setToToken(tempToken);
   };
 
   const createRouteRequest = () => {
@@ -152,16 +146,16 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     }
   }, [fromToken, toToken]);
 
-  // useEffect(() => {
-  //   if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
-  //     getRoutesLiFi(createRouteRequest());
-  //   }
-  // }, [fromToken, toToken, inputAmount]);
+  useEffect(() => {
+    if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
+      getRoutesLiFi(createRouteRequest());
+    }
+  }, [fromToken, toToken, inputAmount]);
 
   useEffect(() => {
     // Function to call getRoutesLiFi with throttling
     const handleGetRoutes = () => {
-      if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
+      if (allowRoutes && fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
         // Clear the existing timeout if it exists
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -188,6 +182,71 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const provider = new ethers.providers.JsonRpcProvider(targetNetwork.rpcUrl, targetNetwork.chainId);
   const walletWithProvider = new ethers.Wallet(localStorage.metaPrivateKey, provider);
 
+  const setWarnings = _value => {
+    if (!_value) {
+      setWarningMessage("Please enter an amount.");
+      setDisableExchangeButton(true);
+      setAllowRoutes(false);
+    } else if (Number.isNaN(_value) && _value !== "." && _value !== "") {
+      setWarningMessage("Please enter a valid number.");
+      setDisableExchangeButton(true);
+      setAllowRoutes(false);
+    } else if (fromToken && _value > parseFloat(fromToken.amount)) {
+      setWarningMessage("Not enough funds.");
+      setDisableExchangeButton(true);
+      setAllowRoutes(false);
+    } else if (_value > 0) {
+      setWarningMessage("");
+      setDisableExchangeButton(false);
+      setAllowRoutes(false);
+    } else if (_value < 0) {
+      setWarningMessage("Input a positive number.");
+      setDisableExchangeButton(true);
+      setAllowRoutes(false);
+    }
+  };
+
+  const updateGeneralMessage = () => {
+    let message = "";
+
+    if (!fromToken || !toToken) {
+      message = "You need to set both tokens for swapping.";
+    } else if (!inputAmount) {
+      message = "Please enter an amount.";
+    } else if (Number.isNaN(Number(inputAmount))) {
+      message = "Please enter a valid number.";
+      setDisableExchangeButton(true);
+    } else if (parseFloat(inputAmount) <= 0) {
+      message = "Input a positive number.";
+      setDisableExchangeButton(true);
+    } else if (parseFloat(inputAmount) > parseFloat(fromToken.amount)) {
+      message = "Not enough funds.";
+      setDisableExchangeButton(true);
+    } else if (allRoutes.length === 0) {
+      message = "No routes available.";
+    } else if (fromToken && toToken && allRoutes[0] && allRoutes.length > 0) {
+      message = `Ready to swap ${fromToken.coinKey} to ${toToken.coinKey} for ${allRoutes[0].gasCostUSD} USD.`;
+      setDisableExchangeButton(false);
+      setAllowRoutes(true);
+    }
+
+    setGeneralMessage(message);
+    // Log for debugging
+    console.log("updateGeneralMessage called with message:", message);
+  };
+
+  useEffect(() => {
+    updateGeneralMessage();
+  }, [
+    fromToken,
+    toToken,
+    inputAmount,
+    allRoutes,
+    fromToken && fromToken.amount,
+    warningMessage,
+    disableExchangeButton,
+  ]);
+
   const getInputAmount = event => {
     const value = event.target.value;
     const cleanValue = value.replace(/[^0-9.]/g, ""); // Remove non-numeric characters except the decimal point
@@ -195,32 +254,19 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     // Allow only one decimal point
     const parts = cleanValue.split(".");
     if (parts.length > 2) {
-      // More than one decimal point
+      // More than one decimal point not allowed
       setInputAmount(parts[0] + "." + parts[1].slice(0)); // Include only first decimal section
     } else {
-      setInputAmount(cleanValue); // Set cleaned value
+      setInputAmount(cleanValue);
     }
-
-    // Convert to number only when necessary for validation
     const numericValue = parseFloat(value);
 
-    if (value === "") {
-      setWarningMessage("Please enter an amount.");
-      setDisableExchangeButton(true);
-    } else if (Number.isNaN(numericValue) && value !== "." && value !== "") {
-      setWarningMessage("Please enter a valid number.");
-      setDisableExchangeButton(true);
-    } else if (fromToken && numericValue > parseFloat(fromToken.amount)) {
-      setWarningMessage("Not enough funds.");
-      setDisableExchangeButton(true);
-    } else if (numericValue > 0) {
-      setWarningMessage("");
-      setDisableExchangeButton(false);
-    } else {
-      setWarningMessage("Input a positive number.");
-      setDisableExchangeButton(true);
-    }
+    setWarnings(numericValue);
   };
+
+  useEffect(() => {
+    setWarnings(inputAmount);
+  }, [allowRoutes, fromToken, toToken, inputAmount]);
 
   const exchangeTokens = async _route => {
     const updateCallback = updatedRoute => {
@@ -229,9 +275,20 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
     /// executing a route
     try {
+      setLoadingExchange(true);
+      notification.info({
+        message: "Transaction Sent",
+        placement: "bottomRight",
+      });
       setWarningMessage("");
       const route = await lifi.executeRoute(walletWithProvider, _route, { updateCallback });
       console.log("fromExchange Token", route);
+      setLoadingExchange(false);
+      notification.info({
+        message: "Transaction Successfull",
+        placement: "bottomRight",
+        icon: <SmileOutlined style={{ color: "#108ee9" }} />,
+      });
       // setInputAmount(0);
     } catch (error) {
       console.log(error);
@@ -281,78 +338,34 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
   return (
     <>
-      {/* <button type="button" onClick={() => testRun()}>
-        getTokens
-      </button> */}
-      <button type="button" onClick={() => console.log(address)}>
+      {/* <button type="button" onClick={() => console.log(allRoutes)}>
         Get UserBalance
       </button>
-      <button type="button" onClick={() => switchTokens()}>
-        Switch
-      </button>
-      <button
-        type="button"
-        onClick={() => console.log(ethers.utils.formatEther(route1.steps[0].estimate.gasCosts[0].amount))}
-      >
-        Native Token Gas Cost
-      </button>
-      <br />
-      {/* <br />
-      <InputNumber addonBefore={<>💵 USD 🔀</>} disabled style={{ width: "100%" }} />
       <br /> */}
-      <br />
+      <div className="d-flex col" style={{ marginTop: "20px" }}>
+        {tokenCheckMessage && (
+          <div style={{ justifyContent: "center", alignItems: "center", width: "100%" }}>
+            <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
+          </div>
+        )}
 
-      {tokenCheckMessage && <div>{tokenCheckMessage}</div>}
-
-      {!tokenCheckMessage && Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
-        <div className="d-flex col">
+        {!tokenCheckMessage && Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
           <div className="col">
             <div className="d-flex" style={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <div>
-                <SelectExchangeToken
-                  targetNetwork={targetNetwork}
-                  address={address}
-                  showMyTokens
-                  selectedItem={fromToken}
-                  setSelectedItem={setFromToken}
-                  showTokenModal={fromTokenModal}
-                  setShowTokenModal={setFromTokenModal}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => switchTokens()}
-                style={{
-                  width: "40px", // Makes the button square which will become a circle with borderRadius
-                  height: "40px",
-                  lineHeight: "40px", // Vertically centers the text/icon in the button
-                  borderRadius: "50%", // This makes the square a circle
-                  backgroundColor: "#808080", // Example: using a Bootstrap-like blue color
-                  color: "white",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <ArrowRightOutlined />
-              </button>
-              <div>
-                <SelectExchangeToken
-                  targetNetwork={targetNetwork}
-                  address={address}
-                  showMyTokens={false}
-                  selectedItem={toToken}
-                  setSelectedItem={setToToken}
-                  showTokenModal={toTokenModal}
-                  setShowTokenModal={setToTokenModal}
-                  excludeToken={fromToken || null}
-                />
-              </div>
+              <SelectTokens
+                targetNetwork={targetNetwork}
+                address={address}
+                showMyTokens
+                showTokenModal={showTokenModal}
+                setShowTokenModal={setShowTokenModal}
+                fromToken={fromToken}
+                setFromToken={setFromToken}
+                toToken={toToken}
+                setToToken={setToToken}
+              />
             </div>
-
-            <div>
+            <div style={{ marginTop: "20px" }}>
+              <span style={{ fontWeight: "bold" }}> You swap:</span>
               <Input
                 value={inputAmount}
                 placeholder="Enter amount"
@@ -370,31 +383,45 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
                 disabled={disableInputNumber}
                 onChange={getInputAmount}
               />
-              {warningMessage}
             </div>
-            <div>
+            <div style={{ marginTop: "20px" }}>
               <button
                 type="button"
-                className="btn btn-light"
+                className="btn btn-primary"
+                style={{
+                  width: "100%",
+                  borderRadius: "15px",
+                  padding: "10px",
+                  backgroundColor: "#90EE90",
+                  borderColor: "#90EE90",
+                }}
                 disabled={disableExchangeButton}
                 onClick={() => exchangeTokens(allRoutes[0])}
               >
-                {!fromToken && !toToken && <div>no tokens set</div>}
-                {fromToken &&
-                  toToken &&
-                  (allRoutes.length > 0 ? (
-                    <div>
-                      swap {fromToken.coinKey} to {toToken.coinKey}
-                      {allRoutes[0].gasCostUSD}
-                    </div>
-                  ) : (
-                    <div>no routes available</div>
-                  ))}
+                {loadingExchange ? (
+                  <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
+                ) : (
+                  <span style={{ color: "black" }}>🧑‍🎤 Exchange</span>
+                )}
               </button>
             </div>
+            {generalMessage && (
+              <div
+                style={{
+                  padding: "10px",
+                  marginTop: "10px",
+                  borderRadius: "5px",
+                  backgroundColor: "#f8f9fa",
+                  border: "1px solid #ced4da",
+                  color: "#495057",
+                }}
+              >
+                {generalMessage}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 };

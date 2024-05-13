@@ -10,15 +10,7 @@ function SwapPage({ targetNetwork, setTargetNetwork, address, networkSettingsHel
   return (
     <div className="container">
       <div className="col-md-8 flex" style={{ marginTop: "50px" }}>
-        <h1>Here you can swap soon</h1>
-        <button
-          type="button"
-          onClick={() => {
-            console.log(address, userProvider);
-          }}
-        >
-          Click Me
-        </button>
+        <h1>Exchange</h1>
         <div>
           <SelectorWithSettings
             settingsHelper={networkSettingsHelper}
