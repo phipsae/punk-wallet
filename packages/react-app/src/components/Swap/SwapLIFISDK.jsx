@@ -18,11 +18,12 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [disableInputNumber, setDisableInputNumber] = useState(true);
   const [userBalanceNativeToken, setUserBalanceNativeToken] = useState();
   const [gasPriceNativeToken, setGasPriceNativeToken] = useState();
-  const [tokenCheckMessage, setTokenCheckMessage] = useState("loading");
+  const [hasTokens, setHasTokens] = useState();
   const [allowRoutes, setAllowRoutes] = useState(false);
   const [generalMessage, setGeneralMessage] = useState("");
 
   const [loadingExchange, setLoadingExchange] = useState(false);
+  const [tokenCheckLoading, setTokenCheckLoading] = useState(false);
 
   const timeoutRef = useRef(null);
 
@@ -60,30 +61,51 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
   const checkIfTokens = async () => {
     try {
-      if (Object.values(supportedNetworks).includes(targetNetwork.chainId)) {
-        const allTokensPromise = getTokens([targetNetwork.chainId]);
-        const allTokensFul = await allTokensPromise;
+      const allTokensPromise = getTokens([targetNetwork.chainId]);
+      setTokenCheckLoading(true);
+      const allTokensFul = await allTokensPromise;
 
-        const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
-        const balancesFul = await balances;
+      const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
+      const balancesFul = await balances;
 
-        const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
-
-        if (balancesFullSort.length > 0) {
-          setTokenCheckMessage("");
-        } else {
-          console.log("No tokens");
-          setTokenCheckMessage("No tokens");
-        }
-
-        console.log(balancesFullSort);
+      const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
+      setTokenCheckLoading(false);
+      if (balancesFullSort.length > 0) {
+        setHasTokens(true);
       } else {
-        setTokenCheckMessage("Network not supported");
+        setHasTokens(false);
       }
     } catch (error) {
       console.error("Failed to fetch from blockchain:", error);
     }
   };
+
+  // const checkIfTokens = async () => {
+  //   try {
+  //     if (Object.values(supportedNetworks).includes(targetNetwork.chainId)) {
+  //       const allTokensPromise = getTokens([targetNetwork.chainId]);
+  //       const allTokensFul = await allTokensPromise;
+
+  //       const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
+  //       const balancesFul = await balances;
+
+  //       const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
+
+  //       if (balancesFullSort.length > 0) {
+  //         setTokenCheckMessage("");
+  //       } else {
+  //         console.log("No tokens");
+  //         setTokenCheckMessage("No tokens");
+  //       }
+
+  //       console.log(balancesFullSort);
+  //     } else {
+  //       setTokenCheckMessage("Network not supported");
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to fetch from blockchain:", error);
+  //   }
+  // };
 
   const createRouteRequest = () => {
     const routesRequestInput = {
@@ -138,7 +160,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
   useEffect(() => {
     if (fromToken && toToken && fromToken.address === toToken.address) {
-      setWarningMessage("Pls don't select same token");
+      setWarningMessage("⚠️ Pls don't select same token");
       setDisableExchangeButton(true);
       setDisableInputNumber(true);
     } else {
@@ -184,15 +206,15 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
   const setWarnings = _value => {
     if (!_value) {
-      setWarningMessage("Please enter an amount.");
+      setWarningMessage("⚠️ Please enter an amount.");
       setDisableExchangeButton(true);
       setAllowRoutes(false);
     } else if (Number.isNaN(_value) && _value !== "." && _value !== "") {
-      setWarningMessage("Please enter a valid number.");
+      setWarningMessage("⚠️ Please enter a valid number.");
       setDisableExchangeButton(true);
       setAllowRoutes(false);
     } else if (fromToken && _value > parseFloat(fromToken.amount)) {
-      setWarningMessage("Not enough funds.");
+      setWarningMessage("⚠️ Not enough funds.");
       setDisableExchangeButton(true);
       setAllowRoutes(false);
     } else if (_value > 0) {
@@ -200,7 +222,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
       setDisableExchangeButton(false);
       setAllowRoutes(false);
     } else if (_value < 0) {
-      setWarningMessage("Input a positive number.");
+      setWarningMessage("⚠️ Input a positive number.");
       setDisableExchangeButton(true);
       setAllowRoutes(false);
     }
@@ -210,22 +232,22 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     let message = "";
 
     if (!fromToken || !toToken) {
-      message = "You need to set both tokens for swapping.";
+      message = "⚠️ You need to set both tokens for swapping.";
     } else if (!inputAmount) {
-      message = "Please enter an amount.";
+      message = "⚠️ Please enter an amount.";
     } else if (Number.isNaN(Number(inputAmount))) {
-      message = "Please enter a valid number.";
+      message = "⚠️ Please enter a valid number.";
       setDisableExchangeButton(true);
     } else if (parseFloat(inputAmount) <= 0) {
-      message = "Input a positive number.";
+      message = "⚠️ Input a positive number.";
       setDisableExchangeButton(true);
     } else if (parseFloat(inputAmount) > parseFloat(fromToken.amount)) {
-      message = "Not enough funds.";
+      message = "⚠️ Not enough funds.";
       setDisableExchangeButton(true);
     } else if (allRoutes.length === 0) {
-      message = "No routes available.";
+      message = "⚠️ No routes available.";
     } else if (fromToken && toToken && allRoutes[0] && allRoutes.length > 0) {
-      message = `Ready to swap ${fromToken.coinKey} to ${toToken.coinKey} for ${allRoutes[0].gasCostUSD} USD.`;
+      message = `✅ Ready to swap ${fromToken.coinKey} to ${toToken.coinKey} for ${allRoutes[0].gasCostUSD} USD.`;
       setDisableExchangeButton(false);
       setAllowRoutes(true);
     }
@@ -289,10 +311,16 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         placement: "bottomRight",
         icon: <SmileOutlined style={{ color: "#108ee9" }} />,
       });
-      // setInputAmount(0);
     } catch (error) {
       console.log(error);
       getRoutesLiFi(createRouteRequest());
+      setLoadingExchange(false);
+      notification.error({
+        message: "Transaction error",
+        description: error.message,
+        placement: "bottomRight",
+        // icon: <SmileOutlined style={{ color: "#108ee9" }} />,
+      });
       setWarningMessage(error.message);
     }
   };
@@ -342,86 +370,113 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         Get UserBalance
       </button>
       <br /> */}
-      <div className="d-flex col" style={{ marginTop: "20px" }}>
-        {tokenCheckMessage && (
-          <div style={{ justifyContent: "center", alignItems: "center", width: "100%" }}>
-            <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
-          </div>
-        )}
-
-        {!tokenCheckMessage && Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
-          <div className="col">
-            <div className="d-flex" style={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <SelectTokens
-                targetNetwork={targetNetwork}
-                address={address}
-                showMyTokens
-                showTokenModal={showTokenModal}
-                setShowTokenModal={setShowTokenModal}
-                fromToken={fromToken}
-                setFromToken={setFromToken}
-                toToken={toToken}
-                setToToken={setToToken}
-              />
+      {Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
+        <div className="d-flex col" style={{ marginTop: "20px" }}>
+          {!hasTokens ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+                height: "300px",
+                fontWeight: "bold",
+              }}
+            >
+              {tokenCheckLoading ? (
+                <RedoOutlined spin style={{ fontSize: "24px" }} />
+              ) : (
+                <span> You have no tokens. </span>
+              )}
             </div>
-            <div style={{ marginTop: "20px" }}>
-              <span style={{ fontWeight: "bold" }}> You swap:</span>
-              <Input
-                value={inputAmount}
-                placeholder="Enter amount"
-                prefix={
-                  fromToken ? (
-                    <img
-                      src={fromToken.logoURI}
-                      alt="n/a"
-                      style={{ width: "20px", marginRight: "10px", verticalAlign: "middle" }}
-                    />
-                  ) : (
-                    <span> </span>
-                  )
-                }
-                disabled={disableInputNumber}
-                onChange={getInputAmount}
-              />
-            </div>
-            <div style={{ marginTop: "20px" }}>
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{
-                  width: "100%",
-                  borderRadius: "15px",
-                  padding: "10px",
-                  backgroundColor: "#90EE90",
-                  borderColor: "#90EE90",
-                }}
-                disabled={disableExchangeButton}
-                onClick={() => exchangeTokens(allRoutes[0])}
-              >
-                {loadingExchange ? (
-                  <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
-                ) : (
-                  <span style={{ color: "black" }}>🧑‍🎤 Exchange</span>
-                )}
-              </button>
-            </div>
-            {generalMessage && (
-              <div
-                style={{
-                  padding: "10px",
-                  marginTop: "10px",
-                  borderRadius: "5px",
-                  backgroundColor: "#f8f9fa",
-                  border: "1px solid #ced4da",
-                  color: "#495057",
-                }}
-              >
-                {generalMessage}
+          ) : (
+            <div className="col">
+              <div className="d-flex" style={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                <SelectTokens
+                  targetNetwork={targetNetwork}
+                  address={address}
+                  showMyTokens
+                  showTokenModal={showTokenModal}
+                  setShowTokenModal={setShowTokenModal}
+                  fromToken={fromToken}
+                  setFromToken={setFromToken}
+                  toToken={toToken}
+                  setToToken={setToToken}
+                />
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              <div style={{ marginTop: "20px" }}>
+                <span style={{ fontWeight: "bold" }}> You swap:</span>
+                <Input
+                  value={inputAmount}
+                  placeholder="Enter amount"
+                  prefix={
+                    fromToken ? (
+                      <img
+                        src={fromToken.logoURI}
+                        alt="n/a"
+                        style={{ width: "20px", marginRight: "10px", verticalAlign: "middle" }}
+                      />
+                    ) : (
+                      <span> </span>
+                    )
+                  }
+                  disabled={disableInputNumber}
+                  onChange={getInputAmount}
+                />
+              </div>
+              <div style={{ marginTop: "20px" }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{
+                    width: "100%",
+                    borderRadius: "15px",
+                    padding: "10px",
+                    backgroundColor: "#90EE90",
+                    borderColor: "#90EE90",
+                  }}
+                  disabled={disableExchangeButton}
+                  onClick={() => exchangeTokens(allRoutes[0])}
+                >
+                  {loadingExchange ? (
+                    <RedoOutlined spin style={{ fontSize: "24px", fontWeight: "bold" }} />
+                  ) : (
+                    <span style={{ color: "black" }}>🧑‍🎤 Exchange</span>
+                  )}
+                </button>
+              </div>
+              {generalMessage && (
+                <div
+                  style={{
+                    padding: "10px",
+                    marginTop: "10px",
+                    borderRadius: "5px",
+                    backgroundColor: "#f8f9fa",
+                    border: "1px solid #ced4da",
+                    color: "#495057",
+                  }}
+                >
+                  {generalMessage}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+      {!Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            height: "300px",
+            fontWeight: "bold",
+          }}
+        >
+          Network not supported
+        </div>
+      )}
     </>
   );
 };

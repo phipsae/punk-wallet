@@ -9,21 +9,23 @@ function SwapPage({ targetNetwork, setTargetNetwork, address, networkSettingsHel
   const [setNetworkSettingsModalOpen] = useState(false);
   return (
     <div className="container">
-      <div className="col-md-8 flex" style={{ marginTop: "50px" }}>
-        <h1>Exchange</h1>
-        <div>
-          <SelectorWithSettings
-            settingsHelper={networkSettingsHelper}
-            settingsModalOpen={setNetworkSettingsModalOpen}
-            itemCoreDisplay={network => <NetworkDisplay network={network} />}
-            onChange={() => {
-              setTargetNetwork(networkSettingsHelper.getSelectedItem(true));
-            }}
-            optionStyle={{ lineHeight: 1.1 }}
-          />
-        </div>
+      <div className="row justify-content-center">
+        <div className="col-md-8 flex" style={{ marginTop: "50px" }}>
+          <h1>Exchange</h1>
+          <div>
+            <SelectorWithSettings
+              settingsHelper={networkSettingsHelper}
+              settingsModalOpen={setNetworkSettingsModalOpen}
+              itemCoreDisplay={network => <NetworkDisplay network={network} />}
+              onChange={() => {
+                setTargetNetwork(networkSettingsHelper.getSelectedItem(true));
+              }}
+              optionStyle={{ lineHeight: 1.1 }}
+            />
+          </div>
 
-        <SwapLIFISDK targetNetwork={targetNetwork} address={address} userProvider={userProvider} />
+          <SwapLIFISDK targetNetwork={targetNetwork} address={address} userProvider={userProvider} />
+        </div>
       </div>
     </div>
   );
