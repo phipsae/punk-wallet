@@ -12,13 +12,56 @@ export const TokenTable = ({ items, loading, message, setSelectedItem }) => {
   return (
     <>
       <div className="table-responsive sticky-header">
-        <table className="table">
+        <table
+          className="table"
+          style={{ borderBottom: "2px solid #dee2e6", borderLeft: "none", borderRight: "none", borderTop: "none" }}
+        >
           <thead>
             <tr className="">
-              <th className="col-4 text-start">Asset</th>
-              <th className="col-2-6 text-end">Price</th>
-              <th className="col-2-6 text-end">Balance</th>
-              <th className="col-2-6 text-end">Value</th>
+              <th
+                className="col-4 text-start"
+                style={{
+                  borderBottom: "2px solid #dee2e6",
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderTop: "none",
+                }}
+              >
+                Asset
+              </th>
+              <th
+                className="col-2-6 text-end"
+                style={{
+                  borderBottom: "2px solid #dee2e6",
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderTop: "none",
+                }}
+              >
+                Price
+              </th>
+              <th
+                className="col-2-6 text-end"
+                style={{
+                  borderBottom: "2px solid #dee2e6",
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderTop: "none",
+                }}
+              >
+                Balance
+              </th>
+              <th
+                className="col-2-6 text-end"
+                style={{
+                  borderBottom: "2px solid #dee2e6",
+                  borderLeft: "none",
+                  borderRight: "none",
+                  borderTop: "none",
+                }}
+              >
+                Value
+              </th>
             </tr>
           </thead>
         </table>
@@ -38,7 +81,7 @@ export const TokenTable = ({ items, loading, message, setSelectedItem }) => {
                     verticalAlign: "middle",
                   }}
                 >
-                  <td className="col-4">
+                  <td className="col-4"  style={{ borderBottom: "2px solid #dee2e6", borderLeft: "none", borderRight: "none", borderTop: "none" }}>
                     <div className="row">
                       <img
                         src={item.logoURI}
@@ -48,9 +91,9 @@ export const TokenTable = ({ items, loading, message, setSelectedItem }) => {
                       {item.coinKey}
                     </div>
                   </td>
-                  <td className="col-2-6 text-end col-price">${(item.priceUSD * 1).toFixed(2)}</td>
-                  <td className="col-2-6 text-end">{(item.amount * 1).toFixed(4)}</td>
-                  <td className="col-2-6 text-end">${(item.priceUSD * item.amount).toFixed(2)}</td>
+                  <td className="col-2-6 text-end col-price"  style={{ borderBottom: "2px solid #dee2e6", borderLeft: "none", borderRight: "none", borderTop: "none" }}>${(item.priceUSD * 1).toFixed(2)}</td>
+                  <td className="col-2-6 text-end"  style={{ borderBottom: "2px solid #dee2e6", borderLeft: "none", borderRight: "none", borderTop: "none" }}>{(item.amount * 1).toFixed(4)}</td>
+                  <td className="col-2-6 text-end" style={{ borderBottom: "2px solid #dee2e6", borderLeft: "none", borderRight: "none", borderTop: "none" }} >${(item.priceUSD * item.amount).toFixed(2)}</td>
                 </tr>
               )) : null }
           {items && items.length === 0 && (

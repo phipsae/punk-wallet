@@ -80,33 +80,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     }
   };
 
-  // const checkIfTokens = async () => {
-  //   try {
-  //     if (Object.values(supportedNetworks).includes(targetNetwork.chainId)) {
-  //       const allTokensPromise = getTokens([targetNetwork.chainId]);
-  //       const allTokensFul = await allTokensPromise;
-
-  //       const balances = lifi.getTokenBalancesForChains(address, allTokensFul.tokens);
-  //       const balancesFul = await balances;
-
-  //       const balancesFullSort = balancesFul[targetNetwork.chainId].filter(item => item.amount > 0);
-
-  //       if (balancesFullSort.length > 0) {
-  //         setTokenCheckMessage("");
-  //       } else {
-  //         console.log("No tokens");
-  //         setTokenCheckMessage("No tokens");
-  //       }
-
-  //       console.log(balancesFullSort);
-  //     } else {
-  //       setTokenCheckMessage("Network not supported");
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to fetch from blockchain:", error);
-  //   }
-  // };
-
   const createRouteRequest = () => {
     const routesRequestInput = {
       fromAddress: address,
@@ -201,6 +174,7 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     };
   }, [fromToken, toToken, inputAmount]); // Dependencies array
 
+  /// change for injected wallet
   const provider = new ethers.providers.JsonRpcProvider(targetNetwork.rpcUrl, targetNetwork.chainId);
   const walletWithProvider = new ethers.Wallet(localStorage.metaPrivateKey, provider);
 
