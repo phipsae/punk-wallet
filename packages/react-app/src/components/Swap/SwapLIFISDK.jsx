@@ -280,6 +280,9 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
       const route = await lifi.executeRoute(walletWithProvider, _route, { updateCallback });
       console.log("fromExchange Token", route);
       setLoadingExchange(false);
+      setToToken();
+      setFromToken();
+      setInputAmount();
       notification.info({
         message: "Transaction Successfull",
         placement: "bottomRight",
@@ -378,25 +381,42 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
                   setToToken={setToToken}
                 />
               </div>
-              <div style={{ marginTop: "20px" }}>
-                <span style={{ fontWeight: "bold" }}> You swap:</span>
-                <Input
-                  value={inputAmount}
-                  placeholder="Enter amount"
-                  prefix={
-                    fromToken ? (
+              <div className="row" style={{ marginTop: "20px" }}>
+                <div className="col">
+                  <span style={{ fontWeight: "bold" }}> You swap:</span>
+                  <Input
+                    value={inputAmount}
+                    placeholder="Enter amount"
+                    prefix={
+                      fromToken ? (
+                        <img
+                          src={fromToken.logoURI}
+                          alt="n/a"
+                          style={{ width: "20px", marginRight: "10px", verticalAlign: "middle" }}
+                        />
+                      ) : (
+                        <span> </span>
+                      )
+                    }
+                    disabled={disableInputNumber}
+                    onChange={getInputAmount}
+                  />
+                </div>
+                <div className="col">
+                  <span style={{ fontWeight: "bold" }}> Into:</span>
+                  {toToken && route0 ? (
+                    <div>
                       <img
-                        src={fromToken.logoURI}
+                        src={toToken.logoURI}
                         alt="n/a"
                         style={{ width: "20px", marginRight: "10px", verticalAlign: "middle" }}
                       />
-                    ) : (
-                      <span> </span>
-                    )
-                  }
-                  disabled={disableInputNumber}
-                  onChange={getInputAmount}
-                />
+                      {(route0.toAmount / 10 ** toToken.decimals).toFixed(4).toString()}
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                </div>
               </div>
               <div style={{ marginTop: "20px" }}>
                 <button

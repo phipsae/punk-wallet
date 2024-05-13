@@ -33,7 +33,9 @@ export const ShowToken = ({ selectedItem, setShowTokenModal, from }) => {
             </div>
             <div style={{ textAlign: "left", marginLeft: "10px" }}>
               <div>{selectedItem ? selectedItem.coinKey : "-"}</div>
-              <div>{selectedItem ? Number(selectedItem.amount).toFixed(4) : "-"}</div>
+              <div style={{ fontSize: "10px" }}>
+                Balance: {selectedItem ? Number(selectedItem.amount).toFixed(4) : "-"}
+              </div>
             </div>
           </div>
         </div>
