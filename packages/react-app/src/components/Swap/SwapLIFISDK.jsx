@@ -132,16 +132,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   }, [address]);
 
   useEffect(() => {
-    if (fromToken && toToken && fromToken.address === toToken.address) {
-      setWarningMessage("⚠️ Pls don't select same token");
-      setDisableExchangeButton(true);
-      setDisableInputNumber(true);
-    } else {
-      setWarningMessage("");
-    }
-  }, [fromToken, toToken]);
-
-  useEffect(() => {
     if (fromToken && toToken && inputAmount > 0 && fromToken.address !== toToken.address) {
       getRoutesLiFi(createRouteRequest());
     }
@@ -207,6 +197,10 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
 
     if (!fromToken || !toToken) {
       message = "⚠️ You need to set both tokens for swapping.";
+    } else if (fromToken && toToken && fromToken.address === toToken.address) {
+      message = "⚠️ Pls don't select same token";
+      setDisableExchangeButton(true);
+      setDisableInputNumber(true);
     } else if (!inputAmount) {
       message = "⚠️ Please enter an amount.";
     } else if (Number.isNaN(Number(inputAmount))) {
