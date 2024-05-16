@@ -344,15 +344,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         Get UserBalance
       </button>
       <br /> */}
-      <button
-        type="button"
-        onClick={() => {
-          console.log(userProvider._network.chainId);
-          console.log(targetNetwork.chainId);
-        }}
-      >
-        Click Me
-      </button>
       {Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
         <div className="d-flex col" style={{ marginTop: "20px" }}>
           {!hasTokens ? (
