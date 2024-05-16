@@ -25,6 +25,8 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const [loadingExchange, setLoadingExchange] = useState(false);
   const [tokenCheckLoading, setTokenCheckLoading] = useState(false);
 
+  const walletWithProvider = userProvider.getSigner();
+
   const timeoutRef = useRef(null);
 
   const lifi = new LiFi({
@@ -164,10 +166,6 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     };
   }, [fromToken, toToken, inputAmount]); // Dependencies array
 
-  /// change for injected wallet
-  const provider = new ethers.providers.JsonRpcProvider(targetNetwork.rpcUrl, targetNetwork.chainId);
-  const walletWithProvider = new ethers.Wallet(localStorage.metaPrivateKey, provider);
-
   const setWarnings = _value => {
     if (!_value) {
       setWarningMessage("⚠️ Please enter an amount.");
@@ -195,7 +193,10 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
   const updateGeneralMessage = () => {
     let message = "";
 
-    if (!fromToken || !toToken) {
+    if (userProvider && userProvider._network && userProvider._network.chainId !== targetNetwork.chainId) {
+      message = "⚠️ Networks do not match, pls select the same in injected Wallet and in the drop down.";
+      setDisableExchangeButton(true);
+    } else if (!fromToken || !toToken) {
       message = "⚠️ You need to set both tokens for swapping.";
     } else if (fromToken && toToken && fromToken.address === toToken.address) {
       message = "⚠️ Pls don't select same token";
@@ -235,6 +236,8 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
     fromToken && fromToken.amount,
     warningMessage,
     disableExchangeButton,
+    userProvider._network,
+    targetNetwork,
   ]);
 
   const getInputAmount = event => {
@@ -341,6 +344,15 @@ export const SwapLIFISDK = ({ targetNetwork, address, userProvider }) => {
         Get UserBalance
       </button>
       <br /> */}
+      <button
+        type="button"
+        onClick={() => {
+          console.log(userProvider._network.chainId);
+          console.log(targetNetwork.chainId);
+        }}
+      >
+        Click Me
+      </button>
       {Object.values(supportedNetworks).includes(targetNetwork.chainId) && (
         <div className="d-flex col" style={{ marginTop: "20px" }}>
           {!hasTokens ? (
